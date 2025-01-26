@@ -5,6 +5,10 @@ import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import errorMiddleware from "./middlewares/error.middleware";
 import { Pool } from "pg";
+import path from "path";
+import fs from "fs";
+import cors from "cors";
+
 
 class App {
   public app: express.Application;
@@ -19,11 +23,12 @@ class App {
     this.initializeErrorHanlding();
     this.initializeControllers(controllers);
     this.connectToTheDataBase();
+    this.initalizeStaticFiles();
   }
 
   public listen() {
     this.app.listen(this.port, () => {
-      console.log(`App listen to port ${this.port}`);
+      console.log(`App listen to port http://localhost:${this.port}`);
     });
   }
 
@@ -34,12 +39,30 @@ class App {
 
   private initializeErrorHanlding(): void {
     this.app.use(errorMiddleware);
+    this.app.use(
+      cors({
+        origin: "*",
+        credentials: true,
+      })
+    );
   }
 
   private initializeControllers(controllers: Controller[]): void {
     controllers.forEach((controller) => {
       this.app.use("/", controller.router);
     });
+  }
+
+  private initalizeStaticFiles() {
+    const uploadDir = path.join(
+      __dirname,
+      "src/config/saveFilesInDiskServer/images"
+    );
+
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    this.app.use("/images", express.static(uploadDir));
   }
 
   private async connectToTheDataBase() {
