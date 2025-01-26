@@ -1,6 +1,6 @@
 import Article from "./articles.interface";
 import IArticlesRepository from "./articlesRepository.interface";
-import { CreateArticleDto } from "./articles.dto";
+import { AddFileDto, CreateArticleDto } from "./articles.dto";
 import ArticleAlreadyException from "../exceptions/ArticleAlreadyExistException";
 
 class ArticleService {
@@ -12,9 +12,13 @@ class ArticleService {
     if (articleExist) throw new ArticleAlreadyException(title);
   }
 
-  public async createArticle(newArticle: CreateArticleDto): Promise<Article> {
+  public async createArticle(
+    newArticle: CreateArticleDto,
+    files?: AddFileDto[]
+  ): Promise<Article> {
     await this.checkIfArticleTitleAlreadyExist(newArticle.title);
-    return this.repository.createArticle(newArticle);
+    if (files) return await this.repository.createArticle(newArticle, files);
+    return await this.repository.createArticle(newArticle);
   }
 }
 
