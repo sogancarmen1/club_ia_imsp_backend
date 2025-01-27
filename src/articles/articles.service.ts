@@ -18,7 +18,7 @@ class ArticleService {
   ): Promise<Article> {
     await this.checkIfArticleTitleAlreadyExist(newArticle.title);
     if (files) return await this.repository.createArticle(newArticle, files);
-    return await this.repository.createArticle(newArticle);
+    else return await this.repository.createArticle(newArticle);
   }
 }
 

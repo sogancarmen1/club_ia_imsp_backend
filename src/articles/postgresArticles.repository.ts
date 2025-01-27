@@ -1,4 +1,4 @@
-import { Pool, QueryResult } from "pg";
+import { Pool } from "pg";
 import { AddFileDto, CreateArticleDto } from "./articles.dto";
 import Article from "./articles.interface";
 import IArticlesRepository from "./articlesRepository.interface";
@@ -30,7 +30,7 @@ class PostgresArticlesRepository implements IArticlesRepository {
               type: file.type,
               orignal_name: file.orignal_name,
               files_names: file.files_names,
-              files_size: file.files_size,
+              files_size: file.size,
             };
           })
         : [],
@@ -47,44 +47,40 @@ class PostgresArticlesRepository implements IArticlesRepository {
     files?: AddFileDto[]
   ): Promise<Article> {
     try {
-      let articleFiles: QueryResult<any>;
-      let articleCreated: QueryResult<any>;
-      if (!files) {
-        articleCreated = await this.pool.query(
-          "INSERT INTO articles.informations(title, contain, date_publication, date_update) VALUES ($1, $2, $3, $4) RETURNING *",
-          [newArticle.title, newArticle.contain, new Date(), new Date()]
-        );
-        return this.convertRowToArticle(articleCreated.rows[0]);
+      if (files) {
+        return this.addFilesToArticle(newArticle, files);
       } else {
-        articleCreated = await this.pool.query(
-          "INSERT INTO articles.informations(title, contain, date_publication, date_update) VALUES ($1, $2, $3, $4) RETURNING *",
-          [newArticle.title, newArticle.contain, new Date(), new Date()]
-        );
-        const addFileToArticleDto = this.convertAddFileDtoToString(
-          files,
-          Number(articleCreated.rows[0].id)
-        );
-        articleFiles = await this.pool.query(
-          "INSERT INTO articles.medias(url, type, orignal_name, files_names, size, id_informations) VALUES " +
-            `${addFileToArticleDto}` +
-            " RETURNING *"
-        );
-        console.log(articleFiles);
-        return this.convertRowToArticle(
-          articleCreated.rows[0],
-          articleFiles.rows
-        );
+        const articleCreated = await this.insertArticleInDatabase(newArticle);
+        return this.convertRowToArticle(articleCreated.rows[0]);
       }
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
+  }
+
+  public async addFilesToArticle(
+    article: CreateArticleDto,
+    files: AddFileDto[]
+  ): Promise<Article> {
+    try {
+      const resultInsertArticle = await this.insertArticleInDatabase(article);
+      const addFileToArticleDto = this.convertAddFileDtoToString(
+        files,
+        Number(resultInsertArticle.rows[0].id)
+      );
+      const resultAddFilesToArticle =
+        await this.insertionOfFilesAddToArticleInDatabase(addFileToArticleDto);
+      return this.convertRowToArticle(
+        resultInsertArticle.rows[0],
+        resultAddFilesToArticle.rows
+      );
+    } catch (error) {}
   }
 
   public async isArticleFoundByTitleExist(title: string): Promise<boolean> {
     try {
-      const result = await this.pool.query(
-        "SELECT * FROM articles.informations WHERE title = $1",
-        [title]
+      const result = await this.getInformationsOrMediasBytitleOrOriginalName(
+        title,
+        "informations",
+        "title"
       );
       if (result.rowCount != 0) return true;
       return false;
@@ -93,12 +89,46 @@ class PostgresArticlesRepository implements IArticlesRepository {
 
   public async isFileFoundByFileNameExist(filename: string): Promise<boolean> {
     try {
-      const result = await this.pool.query(
-        "SELECT * FROM articles.medias WHERE orignal_name = $1",
-        [filename]
+      const result = await this.getInformationsOrMediasBytitleOrOriginalName(
+        filename,
+        "medias",
+        "orignal_name"
       );
       if (result.rowCount != 0) return true;
       return false;
+    } catch (error) {}
+  }
+
+  private async getInformationsOrMediasBytitleOrOriginalName(
+    informationsOrMedias: string,
+    table: string,
+    fields: string
+  ) {
+    return await this.pool.query(
+      `SELECT * FROM articles.${table} WHERE ${fields} = $1`,
+      [informationsOrMedias]
+    );
+  }
+
+  private async insertionOfFilesAddToArticleInDatabase(
+    addFileToArticleDto: string
+  ) {
+    try {
+      const result = await this.pool.query(
+        "INSERT INTO articles.medias(url, type, orignal_name, files_names, size, id_informations) VALUES " +
+          `${addFileToArticleDto}` +
+          "  RETURNING *;"
+      );
+      return result;
+    } catch (error) {}
+  }
+
+  private async insertArticleInDatabase(article: CreateArticleDto) {
+    try {
+      return await this.pool.query(
+        "INSERT INTO articles.informations(title, contain, date_publication, date_update) VALUES ($1, $2, $3, $4) returning id, title, contain, date_publication, date_update;",
+        [article.title, article.contain, new Date(), new Date()]
+      );
     } catch (error) {}
   }
 

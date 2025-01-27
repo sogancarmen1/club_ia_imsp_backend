@@ -9,6 +9,10 @@ interface IArticlesRepository {
   ): Promise<Article>;
   isArticleFoundByTitleExist(title: string): Promise<boolean>;
   isFileFoundByFileNameExist(filename: string): Promise<boolean>;
+  addFilesToArticle(
+    article: CreateArticleDto,
+    files: AddFileDto[]
+  ): Promise<Article>;
 }
 
 export default IArticlesRepository;
