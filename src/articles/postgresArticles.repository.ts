@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool, QueryResult } from "pg";
 import { AddFileDto, CreateArticleDto } from "./articles.dto";
 import Article from "./articles.interface";
 import IArticlesRepository from "./articlesRepository.interface";
@@ -18,7 +18,7 @@ class PostgresArticlesRepository implements IArticlesRepository {
   private convertRowToArticle(
     rowArticleCreated: any,
     rowAddFilesToArticle?: any
-  ) {
+  ): Article {
     const article: Article = {
       id: rowArticleCreated.id,
       title: rowArticleCreated.title,
@@ -30,16 +30,26 @@ class PostgresArticlesRepository implements IArticlesRepository {
               type: file.type,
               orignal_name: file.orignal_name,
               files_names: file.files_names,
-              files_size: file.size,
+              size: file.size,
             };
           })
         : [],
     };
+
     return article;
   }
 
-  async getArticleByTitle(title: string): Promise<Article | null> {
-    return null;
+  private convertRowToFiles(rowFilesFound: any): AddFileDto[] {
+    const files: AddFileDto[] = rowFilesFound.map((file) => {
+      return {
+        url: file.url,
+        type: file.type,
+        orignal_name: file.orignal_name,
+        files_names: file.files_names,
+        size: file.size,
+      };
+    });
+    return files;
   }
 
   public async createArticle(
@@ -77,11 +87,12 @@ class PostgresArticlesRepository implements IArticlesRepository {
 
   public async isArticleFoundByTitleExist(title: string): Promise<boolean> {
     try {
-      const result = await this.getInformationsOrMediasBytitleOrOriginalName(
-        title,
-        "informations",
-        "title"
-      );
+      const result =
+        await this.getInformationsOrMediasBytitleOrOriginalNameOrId(
+          title,
+          "informations",
+          "title"
+        );
       if (result.rowCount != 0) return true;
       return false;
     } catch (error) {}
@@ -89,25 +100,105 @@ class PostgresArticlesRepository implements IArticlesRepository {
 
   public async isFileFoundByFileNameExist(filename: string): Promise<boolean> {
     try {
-      const result = await this.getInformationsOrMediasBytitleOrOriginalName(
-        filename,
-        "medias",
-        "orignal_name"
-      );
+      const result =
+        await this.getInformationsOrMediasBytitleOrOriginalNameOrId(
+          filename,
+          "medias",
+          "orignal_name"
+        );
       if (result.rowCount != 0) return true;
       return false;
     } catch (error) {}
   }
 
-  private async getInformationsOrMediasBytitleOrOriginalName(
+  private async getInformationsOrMediasBytitleOrOriginalNameOrId(
     informationsOrMedias: string,
     table: string,
     fields: string
-  ) {
+  ): Promise<QueryResult> {
     return await this.pool.query(
       `SELECT * FROM articles.${table} WHERE ${fields} = $1`,
       [informationsOrMedias]
     );
+  }
+
+  public async deleteArticle(articleId: string): Promise<void> {
+    try {
+      if (
+        await this.getInformationsOrMediasBytitleOrOriginalNameOrId(
+          articleId,
+          "medias",
+          "id_informations"
+        )
+      ) {
+        await this.pool.query(
+          `WITH mediasDeleted AS 
+          (DELETE FROM articles.medias WHERE id_informations = $1 RETURNING id_informations) 
+          DELETE FROM articles.informations WHERE id IN (SELECT id_informations FROM mediasDeleted)`,
+          [articleId]
+        );
+      }
+      await this.pool.query(`DELETE FROM articles.informations WHERE id = $1`, [
+        articleId,
+      ]);
+    } catch (error) {}
+  }
+
+  public async getArticleById(articleId: string): Promise<Article | null> {
+    try {
+      const articleInformations =
+        await this.getInformationsOrMediasBytitleOrOriginalNameOrId(
+          articleId,
+          "informations",
+          "id"
+        );
+      if (!articleInformations) return null;
+      const articleMedias =
+        await this.getInformationsOrMediasBytitleOrOriginalNameOrId(
+          articleInformations.rows[0].id,
+          "medias",
+          "id_informations"
+        );
+      return this.convertRowToArticle(
+        articleInformations.rows[0],
+        articleMedias.rows
+      );
+    } catch (error) {}
+  }
+
+  public async getAllArticles(): Promise<Article[] | []> {
+    try {
+      const resultInformations = await this.pool.query(
+        "SELECT * FROM articles.informations;"
+      );
+      if (resultInformations.rowCount == 0) return [];
+      let allArticle: Article[] = [];
+      for (let i = 0; i < resultInformations.rows.length; i++) {
+        allArticle.push({
+          id: resultInformations.rows[i].id,
+          title: resultInformations.rows[i].title,
+          contain: resultInformations.rows[i].contain,
+          files: this.convertRowToFiles(
+            (
+              await this.getInformationsOrMediasBytitleOrOriginalNameOrId(
+                resultInformations.rows[i].id,
+                "medias",
+                "id_informations"
+              )
+            ).rows
+              ? (
+                  await this.getInformationsOrMediasBytitleOrOriginalNameOrId(
+                    resultInformations.rows[i].id,
+                    "medias",
+                    "id_informations"
+                  )
+                ).rows
+              : []
+          ),
+        });
+      }
+      return allArticle;
+    } catch (error) {}
   }
 
   private async insertionOfFilesAddToArticleInDatabase(
