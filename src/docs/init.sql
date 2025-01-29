@@ -32,8 +32,6 @@ CREATE TABLE public.subscriber (
 	id serial NOT NULL,
 	email varchar NOT NULL,
 	date_inscription date NOT NULL,
-	token_unsubsriber varchar,
-	password varchar,
 	CONSTRAINT subscriber_pk PRIMARY KEY (id)
 );
 

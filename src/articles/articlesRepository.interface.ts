@@ -1,4 +1,3 @@
-import { QueryResult } from "pg";
 import { AddFileDto, CreateArticleDto } from "./articles.dto";
 import Article from "./articles.interface";
 

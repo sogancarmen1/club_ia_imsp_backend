@@ -1,5 +1,3 @@
-import { AddFileDto } from "./articles.dto";
-
 interface Article {
   id: Number;
   title: string;
