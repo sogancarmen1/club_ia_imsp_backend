@@ -12,7 +12,7 @@ export class CreateArticleDto {
 export class AddFileDto {
   public url: string;
   public type: string;
-  public orignal_name: string;
+  public original_name: string;
   public files_names: string;
   public size: number;
 }

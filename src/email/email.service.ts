@@ -13,10 +13,10 @@ class EmailService {
     return await this.repository.addEmail(emailAdd);
   }
 
-  public async deleteEmail(emailAdd: AddEmailDto): Promise<void> {
-    if (!(await this.repository.isEmailExist(emailAdd.email)))
-      throw new EmailNotFoundException(emailAdd.email);
-    await this.repository.deleteEmail(emailAdd.email);
+  public async deleteEmail(emailAdd: string): Promise<void> {
+    if (!(await this.repository.isEmailExist(emailAdd)))
+      throw new EmailNotFoundException(emailAdd);
+    await this.repository.deleteEmail(emailAdd);
   }
 
   public async getAllEmails(): Promise<Email[] | []> {

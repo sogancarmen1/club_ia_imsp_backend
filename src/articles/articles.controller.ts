@@ -137,7 +137,7 @@ class ArticlesController implements Controller {
             .replace(/[\u0300-\u036f]/g, "")
             .replace(/'/g, "")}`,
           type: file.mimetype,
-          orignal_name: file.originalname
+          original_name: file.originalname
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "")
             .replace(/'/g, ""),

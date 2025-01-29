@@ -18,8 +18,12 @@ class NewslettersService {
     );
   }
 
+  public async unsubscriber(email: string) {
+    await this.emailService.deleteEmail(email);
+  }
+
   private convertAllEmailsToOneStringCharactere(emails: Email[] | []): string {
-    return emails.map((email) => `${email}`).join(", ");
+    return emails.map((email: Email) => `${email.the_email}`).join(", ");
   }
 }
 

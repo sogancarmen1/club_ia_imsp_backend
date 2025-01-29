@@ -54,7 +54,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<column name="type" not-null="true">
 		<type name="varchar" length="0"/>
 	</column>
-	<column name="orignal_name" not-null="true">
+	<column name="original_name" not-null="true">
 		<type name="varchar" length="0"/>
 	</column>
 	<column name="files_names" not-null="true">

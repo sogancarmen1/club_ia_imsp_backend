@@ -5,7 +5,7 @@ interface Article {
   files: {
     url: string;
     type: string;
-    orignal_name: string;
+    original_name: string;
     files_names: string;
     size: number;
   }[];

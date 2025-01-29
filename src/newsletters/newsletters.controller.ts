@@ -28,7 +28,26 @@ class NewslettersController implements Controller {
       validateDto(SendNewlettersDto),
       this.sendNewLetters
     );
+
+    this.router.delete(`${this.path}/:email`, this.unsubscriber);
   }
+
+  private unsubscriber = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
+    try {
+      const email = req.params.email;
+      await this.newslettersService.unsubscriber(email);
+      res.status(204).send(new Result(true, "Email has delete!", null));
+    } catch (error) {
+      if (error instanceof HttpException) {
+        res.status(error.status).send(new Result(false, error.message, null));
+      } else {
+        res.status(500).send(new Result(false, "Internal server error", null));
+      }
+    }
+  };
 
   private sendNewLetters = async (
     req: express.Request,
@@ -37,7 +56,7 @@ class NewslettersController implements Controller {
     try {
       const letterInformations: SendNewlettersDto = req.body;
       await this.newslettersService.sendNewsletters(letterInformations);
-      res.send(201).send(new Result(true, "New letters is sent!", null));
+      res.status(201).send(new Result(true, "New letters is sent!", null));
     } catch (error) {
       if (error instanceof HttpException) {
         res.status(error.status).send(new Result(false, error.message, null));

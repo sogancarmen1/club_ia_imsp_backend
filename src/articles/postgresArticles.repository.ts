@@ -28,7 +28,7 @@ class PostgresArticlesRepository implements IArticlesRepository {
             return {
               url: file.url,
               type: file.type,
-              orignal_name: file.orignal_name,
+              original_name: file.original_name,
               files_names: file.files_names,
               size: file.size,
             };
@@ -44,7 +44,7 @@ class PostgresArticlesRepository implements IArticlesRepository {
       return {
         url: file.url,
         type: file.type,
-        orignal_name: file.orignal_name,
+        original_name: file.original_name,
         files_names: file.files_names,
         size: file.size,
       };
@@ -104,7 +104,7 @@ class PostgresArticlesRepository implements IArticlesRepository {
         await this.getInformationsOrMediasBytitleOrOriginalNameOrId(
           filename,
           "medias",
-          "orignal_name"
+          "original_name"
         );
       if (result.rowCount != 0) return true;
       return false;
@@ -206,7 +206,7 @@ class PostgresArticlesRepository implements IArticlesRepository {
   ) {
     try {
       const result = await this.pool.query(
-        "INSERT INTO articles.medias(url, type, orignal_name, files_names, size, id_informations) VALUES " +
+        "INSERT INTO articles.medias(url, type, original_name, files_names, size, id_informations) VALUES " +
           `${addFileToArticleDto}` +
           "  RETURNING *;"
       );
@@ -230,7 +230,7 @@ class PostgresArticlesRepository implements IArticlesRepository {
     return addFileDto
       .map(
         (file) =>
-          `('${file.url}', '${file.type}', '${file.orignal_name}', '${file.files_names}', ${file.size}, ${idArticle})`
+          `('${file.url}', '${file.type}', '${file.original_name}', '${file.files_names}', ${file.size}, ${idArticle})`
       )
       .join(", ");
   }

@@ -1,5 +1,3 @@
-CREATE DATABASE new_database;
-
 CREATE SCHEMA articles;
 
 SET search_path TO pg_catalog,public,articles;
@@ -17,7 +15,7 @@ CREATE TABLE articles.medias (
 	id serial NOT NULL,
 	url varchar NOT NULL,
 	type varchar NOT NULL,
-	orignal_name varchar NOT NULL,
+	original_name varchar NOT NULL,
 	files_names varchar NOT NULL,
 	size integer NOT NULL,
 	id_informations integer,
@@ -32,6 +30,7 @@ CREATE TABLE public.subscriber (
 	id serial NOT NULL,
 	email varchar NOT NULL,
 	date_inscription date NOT NULL,
+	password varchar,
 	CONSTRAINT subscriber_pk PRIMARY KEY (id)
 );
 
