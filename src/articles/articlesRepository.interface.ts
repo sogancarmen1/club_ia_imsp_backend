@@ -1,4 +1,4 @@
-import { AddFileDto, CreateArticleDto } from "./articles.dto";
+import { AddFileDto, CreateArticleDto, UpdateArticleDto } from "./articles.dto";
 import Article from "./articles.interface";
 
 interface IArticlesRepository {
@@ -15,6 +15,12 @@ interface IArticlesRepository {
   getAllArticles(): Promise<Article[] | []>;
   getArticleById(articleId: string): Promise<Article | null>;
   deleteArticle(articleId: string): Promise<void>;
+  deleteAllFilesInArticle(articleId: string): Promise<void>;
+  deleteAFileInArticle(articleId: string, fileId: string): Promise<void>;
+  updateArticleInformation(
+    articleId: string,
+    article: UpdateArticleDto
+  ): Promise<Article>;
 }
 
 export default IArticlesRepository;

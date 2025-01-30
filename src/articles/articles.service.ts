@@ -1,7 +1,7 @@
 import Article from "./articles.interface";
 import IArticlesRepository from "./articlesRepository.interface";
-import { AddFileDto, CreateArticleDto } from "./articles.dto";
-import ArticleAlreadyException from "../exceptions/ArticleAlreadyExistException";
+import { AddFileDto, CreateArticleDto, UpdateArticleDto } from "./articles.dto";
+import ArticleAlreadyExistException from "../exceptions/ArticleAlreadyExistException";
 import ArticleNotFoundException from "../exceptions/ArticleNotFoundException";
 
 class ArticleService {
@@ -10,7 +10,41 @@ class ArticleService {
   public async checkIfArticleTitleAlreadyExist(title: string): Promise<void> {
     const articleExist: boolean =
       await this.repository.isArticleFoundByTitleExist(title);
-    if (articleExist) throw new ArticleAlreadyException(title);
+    if (articleExist) throw new ArticleAlreadyExistException(title);
+  }
+
+  public async updateArticleInformation(
+    articleId: string,
+    article: UpdateArticleDto
+  ): Promise<Article> {
+    await this.ArticleNotFound(articleId);
+    const articleExistingWithTitle =
+      await this.repository.isArticleFoundByTitleExist(article.title);
+    if (articleExistingWithTitle)
+      throw new ArticleAlreadyExistException(article.title);
+    const articleUpdated = await this.repository.updateArticleInformation(
+      articleId,
+      article
+    );
+    return articleUpdated;
+  }
+
+  private async ArticleNotFound(articleId: string) {
+    const articleExist = await this.repository.getArticleById(articleId);
+    if (!articleExist) throw new ArticleNotFoundException(articleId);
+  }
+
+  public async deleteFileInArticle(
+    articleId: string,
+    fileId: string
+  ): Promise<void> {
+    await this.ArticleNotFound(articleId);
+    await this.repository.deleteAFileInArticle(articleId, fileId);
+  }
+
+  public async deleteAllFilesInArticle(articleId: string): Promise<void> {
+    await this.ArticleNotFound(articleId);
+    await this.repository.deleteAllFilesInArticle(articleId);
   }
 
   public async createArticle(

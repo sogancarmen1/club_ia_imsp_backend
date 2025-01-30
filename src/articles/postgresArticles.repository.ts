@@ -1,5 +1,5 @@
 import { Pool, QueryResult } from "pg";
-import { AddFileDto, CreateArticleDto } from "./articles.dto";
+import { AddFileDto, CreateArticleDto, UpdateArticleDto } from "./articles.dto";
 import Article from "./articles.interface";
 import IArticlesRepository from "./articlesRepository.interface";
 
@@ -50,6 +50,46 @@ class PostgresArticlesRepository implements IArticlesRepository {
       };
     });
     return files;
+  }
+
+  public async deleteAllFilesInArticle(articleId: string): Promise<void> {
+    try {
+      await this.pool.query(
+        "DELETE FROM artciles.medias WHERE id_informations = $1",
+        [articleId]
+      );
+    } catch (error) {}
+  }
+
+  public async deleteAFileInArticle(
+    articleId: string,
+    fileId: string
+  ): Promise<void> {
+    try {
+      await this.pool.query(
+        "DELETE FROM articles.medias WHERE id_informations = $1 AND id = $2",
+        [articleId, fileId]
+      );
+    } catch (error) {}
+  }
+
+  public async updateArticleInformation(
+    articleId: string,
+    article: UpdateArticleDto
+  ): Promise<Article> {
+    try {
+      const result = await this.pool.query(
+        "UPDATE articles.informations SET title = $1, contain = $2, date_update = $3, WHERE id = $4 RETURNING * ",
+        [article.title, article.contain, new Date(), articleId]
+      );
+      const result2 =
+        await this.getInformationsOrMediasBytitleOrOriginalNameOrId(
+          articleId,
+          "medias",
+          "id_informations"
+        );
+      return this.convertRowToArticle(result.rows[0], result2.rows);
+    } catch (error) {}
   }
 
   public async createArticle(

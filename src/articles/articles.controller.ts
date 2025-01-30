@@ -3,7 +3,7 @@ import express from "express";
 import ArticleService from "./articles.service";
 import PostgresArticlesRepository from "./postgresArticles.repository";
 import { validateDto } from "../middlewares/validation.middleware";
-import { AddFileDto, CreateArticleDto } from "./articles.dto";
+import { AddFileDto, CreateArticleDto, UpdateArticleDto } from "./articles.dto";
 import { Result } from "../utils/utils";
 import HttpException from "../exceptions/HttpException";
 import upload from "../config/saveFilesInDiskServer/multer.config";
@@ -18,6 +18,8 @@ class ArticlesController implements Controller {
   }
 
   public initializeRoutes() {
+    this.router.put(`${this.path}/:id`, this.updateArticleInformation);
+
     this.router.post(
       this.path,
       upload.array("media"),
@@ -28,7 +30,83 @@ class ArticlesController implements Controller {
     this.router.get(`${this.path}/:id`, this.getArticleById);
     this.router.get(this.path, this.getAllArticles);
     this.router.delete(`${this.path}/:id`, this.deleteArticle);
+    this.router.delete(`${this.path}/:id/medias`, this.deleteAllMedias);
+    this.router.delete(
+      `${this.path}/:id/medias/:mediasid`,
+      this.deleteAMediasInArticle
+    );
   }
+
+  private deleteAMediasInArticle = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
+    try {
+      await this.articleService.deleteFileInArticle(
+        req.params.id,
+        req.params.mediasid
+      );
+      res
+        .status(201)
+        .send(
+          new Result(
+            true,
+            `Medias with id ${req.params.mediasid} has deleted in article with id ${req.params.id}!`,
+            null
+          )
+        );
+    } catch (error) {
+      if (error instanceof HttpException) {
+        res.status(error.status).send(new Result(false, error.message, null));
+      } else {
+        res.status(500).send(new Result(false, "Internal server error", null));
+      }
+    }
+  };
+
+  private deleteAllMedias = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
+    try {
+      await this.articleService.deleteAllFilesInArticle(req.params.id);
+      res
+        .status(201)
+        .send(
+          new Result(
+            true,
+            `All medias in article ${req.params.id} has deleted`,
+            null
+          )
+        );
+    } catch (error) {
+      if (error instanceof HttpException) {
+        res.status(error.status).send(new Result(false, error.message, null));
+      } else {
+        res.status(500).send(new Result(false, "Internal server error", null));
+      }
+    }
+  };
+
+  private updateArticleInformation = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
+    try {
+      const articleInfo: UpdateArticleDto = req.body;
+      const articleUpdated = await this.articleService.updateArticleInformation(
+        req.params.id,
+        articleInfo
+      );
+      res.status(201).send(new Result(true, "All updated", articleUpdated));
+    } catch (error) {
+      if (error instanceof HttpException) {
+        res.status(error.status).send(new Result(false, error.message, null));
+      } else {
+        res.status(500).send(new Result(false, "Internal server error", null));
+      }
+    }
+  };
 
   private deleteArticle = async (
     req: express.Request,
