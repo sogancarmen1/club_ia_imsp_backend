@@ -2,6 +2,7 @@ import { Pool } from "pg";
 import IEmailRepository from "./emailRepository.interface";
 import Email from "./email.interface";
 import AddEmailDto from "./email.dto";
+import { Users } from "authentification/user.interface";
 
 class PostgresEmailRepository implements IEmailRepository {
   public pool: Pool;
@@ -20,6 +21,23 @@ class PostgresEmailRepository implements IEmailRepository {
       the_email: rowEmailCreated.email,
       date_inscription: rowEmailCreated.date_inscription,
     };
+  }
+
+  private convertRowToAdminUser(rowAdmin: any): Users {
+    return {
+      email: rowAdmin.email,
+      password: rowAdmin.password,
+    };
+  }
+
+  public async getAdmin(): Promise<Users | null> {
+    try {
+      const result = await this.pool.query(
+        "SELECT * FROM subscriber WHERE password IS NOT NULL"
+      );
+      if (!result) return null;
+      return this.convertRowToAdminUser(result.rows[0]);
+    } catch (error) {}
   }
 
   public async addEmail(emailAdd: AddEmailDto): Promise<Email> {
@@ -43,7 +61,7 @@ class PostgresEmailRepository implements IEmailRepository {
     } catch (error) {}
   }
 
-  private async getEmail(email: string): Promise<Email> {
+  public async getEmail(email: string): Promise<Email> {
     try {
       const result = await this.pool.query(
         "SELECT * FROM subscriber WHERE email = $1;",

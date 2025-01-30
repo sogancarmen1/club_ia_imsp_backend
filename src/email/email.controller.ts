@@ -12,6 +12,7 @@ import { Result } from "../utils/utils";
 import HttpException from "../exceptions/HttpException";
 import { codeVerificationDto } from "./codeVerification.dto";
 import EmailService from "./email.service";
+import { authMiddleware } from "../middlewares/auth.middleware";
 
 class EmailController implements Controller {
   public path: string = "/email";
@@ -40,7 +41,7 @@ class EmailController implements Controller {
       validateDto(codeVerificationDto),
       this.validateEmail
     );
-    this.router.get(this.path, this.allEmail);
+    this.router.get(this.path, authMiddleware, this.allEmail);
   }
 
   private addEmail = async (req: express.Request, res: express.Response) => {
@@ -60,10 +61,14 @@ class EmailController implements Controller {
     }
   };
 
-  private allEmail = async (req: express.Request, res: express.Response) => {
+  private allEmail = async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
     try {
-      const allEmails = this.emailService.getAllEmails();
-      res.status(201).send(new Result(true, "Newslettes is sent", allEmails));
+      const allEmails = await this.emailService.getAllEmails();
+      res.status(201).send(new Result(true, "All emails!", allEmails));
     } catch (error) {
       if (error instanceof HttpException) {
         res.status(error.status).send(new Result(false, error.message, null));

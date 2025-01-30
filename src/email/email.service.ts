@@ -3,6 +3,7 @@ import AddEmailDto from "./email.dto";
 import Email from "./email.interface";
 import IEmailRepository from "./emailRepository.interface";
 import EmailNotFoundException from "../exceptions/EmailNotFoundException";
+import { Users } from "authentification/user.interface";
 
 class EmailService {
   constructor(private readonly repository: IEmailRepository) {}
@@ -21,6 +22,18 @@ class EmailService {
 
   public async getAllEmails(): Promise<Email[] | []> {
     return await this.repository.getAllEmail();
+  }
+
+  public async getEmail(email: string): Promise<Email> {
+    if (!(await this.repository.isEmailExist(email)))
+      throw new EmailNotFoundException(email);
+    return await this.repository.getEmail(email);
+  }
+
+  public async getAdmin(emailAdmin: string): Promise<Users | null> {
+    if (!(await this.repository.isEmailExist(emailAdmin)))
+      throw new EmailNotFoundException(emailAdmin);
+    return this.repository.getAdmin();
   }
 }
 

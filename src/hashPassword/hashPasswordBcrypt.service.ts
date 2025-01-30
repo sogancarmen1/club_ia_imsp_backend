@@ -9,7 +9,9 @@ class HashPasswordBcryptService implements IHashPasswordService {
     password: string,
     passwordHashed: string
   ): Promise<boolean> {
-    return true;
+    const isPasswordMatching = await bcrypt.compare(password, passwordHashed);
+    if (isPasswordMatching) return true;
+    return false;
   }
 }
 
