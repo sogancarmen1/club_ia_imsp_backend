@@ -9,17 +9,70 @@ import HttpException from "../exceptions/HttpException";
 import upload from "../config/saveFilesInDiskServer/multer.config";
 
 class ArticlesController implements Controller {
-  public path = "/article";
+  public path = "/articles";
   public router = express.Router();
   private articleService = new ArticleService(new PostgresArticlesRepository());
-
+  
   constructor() {
     this.initializeRoutes();
   }
-
+  
   public initializeRoutes() {
-    this.router.put(`${this.path}/:id`, this.updateArticleInformation);
-
+    /**
+     * @swagger
+     * /articles:
+     *   post:
+     *     tags:
+     *       - Articles
+     *     summary: Create a new article
+     *     operationId: "createArticle"
+     *     requestBody:
+     *       description: name and description are REQUIRED but files is OPTIONNAL.
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/CreateArticle'
+     *     responses:
+     *       '201':
+     *         description: project created successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Articles'
+     *       '401':
+     *         description: Authorization information is missing or invalid.
+     * components:
+     *   schemas:
+     *     CreateArticle:
+     *       type: object
+     *       properties:
+     *         title:
+     *           type: string
+     *           example: "write a document"
+     *         contain:
+     *           type: string
+     *           example: "write a contain of document"
+     *         files:
+     *           type: array
+     *           properties:
+     *             url:
+     *              type: string
+     *              example: "the url"
+     *             type:
+     *              type: string
+     *              example: "img/png"
+     *             original_name:
+     *              type: string
+     *              example: "the original name"
+     *             files_names:
+     *              type: string
+     *              example: "the files names"
+     *             size:
+     *              type: integer
+     *              formt: int64
+     *              example: 4352
+     */
     this.router.post(
       this.path,
       upload.array("media"),
@@ -27,10 +80,227 @@ class ArticlesController implements Controller {
       this.createArticle
     );
 
-    this.router.get(`${this.path}/:id`, this.getArticleById);
+    /**
+     * @swagger
+     * /articles/{id}:
+     *    put:
+     *      tags:
+     *        - Articles
+     *      summary: Updating an existing article
+     *      operationId: "updateArticleInformation"
+     *      parameters:
+     *        - name: id
+     *          in: path
+     *          description: Article ID
+     *          required: true
+     *          schema:
+     *            type: integer
+     *            format: int64
+     *      requestBody:
+     *        description: name and contain are REQUIRED but description is OPTIONNAL.
+     *        required: true
+     *        content:
+     *          application/json:
+     *            schema:
+     *              $ref: '#/components/schemas/CreateArticle'
+     *      responses:
+     *        '200':
+     *          description: successfull operation
+     *          content:
+     *            application/json:
+     *              schema:
+     *                $ref: '#/components/schemas/Articles'
+     *        '400':
+     *          description: Invalid ID supplied
+     *        '404':
+     *          description: Project not found
+     *        '405':
+     *          description: Validation exception
+     */
+    this.router.put(`${this.path}/:id`, this.updateArticleInformation);
+
+
+    /**
+     * @swagger
+     * tags:
+     *   - name: Articles
+     *     description: Operations about articles
+     * /articles:
+     *   get:
+     *     tags:
+     *       - Articles
+     *     summary: Returns the list of articles
+     *     operationId: "getAllArticles"
+     *     responses:
+     *       '200':
+     *         description: successful operation
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Articles'
+     *       '401':
+     *         description: Authorization information is missing or invalid.
+     * components:
+     *   schemas:
+     *     Articles:
+     *       type: object
+     *       properties:
+     *         sucess:
+     *               type: boolean
+     *               example: true
+     *         message:
+     *               type: string
+     *               example: "the message"
+     *         data:
+     *             type: array
+     *             items:
+     *               type: object
+     *               properties:
+     *                 id:
+     *                   type: integer
+     *                   format: int64
+     *                   example: 2
+     *                 title:
+     *                   type: string
+     *                   example: MyArticle
+     *                 contain:
+     *                   type: string
+     *                   example: Contain of MyArticle
+     *                 files:
+     *                   type: object
+     *                   properties:
+     *                     url:
+     *                      type: string
+     *                      example: http://localhost:3000/images/myImage.png
+     *                     type:
+     *                      type: string
+     *                      example: img/png
+     *                     original_name:
+     *                      type: string
+     *                      example: original_name
+     *                     files_names:
+     *                      type: string
+     *                      example: original_name formated
+     *                     size:
+     *                      type: integer
+     *                      format: int64
+     *                      example: 2535
+     */
     this.router.get(this.path, this.getAllArticles);
+    
+    /**
+     * @swagger
+     * /articles/{id}:
+     *   get:
+     *     tags:
+     *       - Articles
+     *     summary: Find article by ID
+     *     operationId: "getArticleById"
+     *     parameters:
+     *       - name: id
+     *         in: path
+     *         description: Article ID
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *     responses:
+     *       '200':
+     *         description: successful operation
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Articles'
+     *       '400':
+     *         description: Invalid ID supplied
+     *       '404':
+     *         description: Article not found
+     */
+    this.router.get(`${this.path}/:id`, this.getArticleById);
+
+
+    /**
+     * @swagger
+     * /articles/{id}:
+     *   delete:
+     *     tags:
+     *       - Articles
+     *     summary: Delete a article
+     *     operationId: "deleteArticle"
+     *     parameters:
+     *       - name: id
+     *         in: path
+     *         description: Article ID
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *     responses:
+     *       '204':
+     *         description: OK
+     *       '400':
+     *         description: Invalid ID supplied
+     *       '404':
+     *         description: Article not found
+     */
     this.router.delete(`${this.path}/:id`, this.deleteArticle);
+
+    /**
+     * @swagger
+     * /articles/{id}/medias:
+     *   delete:
+     *     tags:
+     *       - Medias
+     *     summary: Delete all medias in Article
+     *     operationId: "deleteAllMedias"
+     *     parameters:
+     *       - name: id
+     *         in: path
+     *         description: Article ID
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *     responses:
+     *       '204':
+     *         description: OK
+     *       '400':
+     *         description: Invalid ID supplied
+     *       '404':
+     *         description: Article not found
+     */
     this.router.delete(`${this.path}/:id/medias`, this.deleteAllMedias);
+
+    /**
+     * @swagger
+     * /articles/{id}/medias/{mediasid}:
+     *   delete:
+     *     tags:
+     *       - Medias
+     *     summary: Delete a media in Article
+     *     operationId: "deleteAMediasInArticle"
+     *     parameters:
+     *       - name: id
+     *         in: path
+     *         description: Article ID
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - name: mediasid
+     *         in: path
+     *         description: Media ID
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *     responses:
+     *       '204':
+     *         description: OK
+     *       '400':
+     *         description: Invalid ID supplied
+     *       '404':
+     *         description: Article not found
+     */
     this.router.delete(
       `${this.path}/:id/medias/:mediasid`,
       this.deleteAMediasInArticle

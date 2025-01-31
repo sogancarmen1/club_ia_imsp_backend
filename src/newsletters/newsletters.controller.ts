@@ -9,13 +9,17 @@ import { Result } from "../utils/utils";
 import HttpException from "../exceptions/HttpException";
 import EmailService from "../email/email.service";
 import { SendNewlettersDto } from "./newsletters.dto";
+import memoryEmailRepositoryInstance from "../email/memoryEmail.repository";
 
 class NewslettersController implements Controller {
   public path: string = "/newsletter";
   public router: Router = express.Router();
   private newslettersService = new NewslettersService(
     new EmailSendNodeMailerService(),
-    new EmailService(new PostgresEmailRepository())
+    new EmailService(
+      new PostgresEmailRepository(),
+      memoryEmailRepositoryInstance
+    )
   );
 
   constructor() {
@@ -23,12 +27,67 @@ class NewslettersController implements Controller {
   }
 
   public initializeRoutes() {
+    /**
+     * @swagger
+     * /newsletter:
+     *   post:
+     *     tags:
+     *       - newsletter
+     *     summary: Send newsletter
+     *     operationId: "sendNewLetters"
+     *     requestBody:
+     *       description: subject and message are REQUIRED.
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/CreateNewslettes'
+     *     responses:
+     *       '201':
+     *         description: project created successfully
+     *       '401':
+     *         description: Authorization information is missing or invalid.
+     * components:
+     *   schemas:
+     *     CreateNewslettes:
+     *       type: object
+     *       properties:
+     *         subject:
+     *           type: string
+     *           example: "write a document"
+     *         message:
+     *           type: string
+     *           example: "write a contain of mail"
+     */
     this.router.post(
       this.path,
       validateDto(SendNewlettersDto),
       this.sendNewLetters
     );
 
+    /**
+     * @swagger
+     * /newsletter/{email}:
+     *   delete:
+     *     tags:
+     *       - newsletter
+     *     summary: unsubscriber of newsletter
+     *     operationId: "unsubscriber"
+     *     parameters:
+     *       - name: email
+     *         in: path
+     *         description: email
+     *         required: true
+     *         schema:
+     *           type: string
+     *     responses:
+     *       '200':
+     *         description: successful operation
+     *       '400':
+     *         description: Invalid ID supplied
+     *       '404':
+     *         description: Article not found
+     */
     this.router.delete(`${this.path}/:email`, this.unsubscriber);
   }
 

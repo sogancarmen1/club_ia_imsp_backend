@@ -1,7 +1,7 @@
 import { Pool } from "pg";
 import * as dotenv from "dotenv";
 import HashPasswordBcryptService from "../hashPassword/hashPasswordBcrypt.service";
-import EmailAlreadyException from "../exceptions/EmailAlreadyExistException";
+import EmailAlreadyExistException from "../exceptions/EmailAlreadyExistException";
 dotenv.config();
 
 async function initializeDatabase() {
@@ -24,7 +24,7 @@ async function initializeDatabase() {
       [process.env.ADMIN_EMAIL]
     );
     if (resultOfVerification.rowCount != 0)
-      throw new EmailAlreadyException(process.env.ADMIN_EMAIL);
+      throw new EmailAlreadyExistException(process.env.ADMIN_EMAIL);
     await client.query(
       `
         INSERT INTO subscriber(email, date_inscription, password) 

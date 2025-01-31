@@ -8,6 +8,9 @@ class MemoryEmailRepository implements IMemoryEmailRepository {
   private ADDITIONNALMINUTES: number = 10;
   constructor() {
     this.codesSmsVerification = [];
+    if (this.getAllCodeVerification().length > 0) {
+      setInterval(() => this.deleteAutomaticallyCodeVerification(), 60);
+    }
   }
 
   public getDataWhenPhoneNumberHasCode(
@@ -24,9 +27,9 @@ class MemoryEmailRepository implements IMemoryEmailRepository {
   }
 
   public deleteAutomaticallyCodeVerification(): void {
+    const now = new Date();
     this.codesSmsVerification = this.codesSmsVerification.filter(
-      (value) =>
-        value.expiredAt.getMinutes() - value.createdAt.getMinutes() < 10
+      (value) => value.expiredAt > now
     );
   }
 
@@ -70,4 +73,6 @@ class MemoryEmailRepository implements IMemoryEmailRepository {
   }
 }
 
-export default MemoryEmailRepository;
+const memoryEmailRepositoryInstance = new MemoryEmailRepository();
+
+export default memoryEmailRepositoryInstance;

@@ -8,12 +8,16 @@ import validateDto from "../middlewares/validation.middleware";
 import { LoginDto } from "./login.dto";
 import { Result } from "../utils/utils";
 import HttpException from "../exceptions/HttpException";
+import memoryEmailRepositoryInstance from "../email/memoryEmail.repository";
 
 class AuthentificationController implements Controller {
   public path = "/auth";
   public router = express.Router();
   private authentificationService = new AuthentificationService(
-    new EmailService(new PostgresEmailRepository()),
+    new EmailService(
+      new PostgresEmailRepository(),
+      memoryEmailRepositoryInstance
+    ),
     new HashPasswordBcryptService()
   );
 
@@ -22,12 +26,78 @@ class AuthentificationController implements Controller {
   }
 
   public initializeRoutes() {
+    /**
+     * @swagger
+     * tags:
+     *   - name: Authentification
+     *     description: Operations about authentification
+     */
+
+    /**
+     * @swagger
+     * /auth/login:
+     *   post:
+     *     tags:
+     *       - Authentification
+     *     summary: Logs in and returns the authentication  cookie
+     *     operationId: "logginIn"
+     *     requestBody:
+     *       description: A JSON object containing the login and password.
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/LoginRequest'
+     *     responses:
+     *       '200':
+     *         description: >
+     *           Successfully authenticated.
+     *           The session ID is returned in a cookie named `JSESSIONID`. You need to include this cookie in subsequent requests.
+     *       headers:
+     *         Set-Cookies:
+     *           schema:
+     *             type: string
+     *             example: Authorization=abcde12345; Path=/; HttpOnly
+     *       '404':
+     *          description: User not found
+     * components:
+     *   schemas:
+     *     LoginRequest:
+     *        type: object
+     *        properties:
+     *          email:
+     *            type: string
+     *            example: "myemail@gmail.com"
+     *          password:
+     *            type: string
+     *            example: "njhfbrehfbsdh1*"
+     *     securitySchemes:
+     *       cookieAuth:
+     *         type: apiKey
+     *         in: cookie
+     *         name: Authorization
+     *
+     * security:
+     *   - cookieAuth: []
+     */
     this.router.post(
       `${this.path}/login`,
       validateDto(LoginDto),
       this.logginIn
     );
 
+    /**
+     * @swagger
+     * /auth/logout:
+     *   post:
+     *     tags:
+     *       - Authentification
+     *     summary: Delete token in  cookie
+     *     operationId: "loggingOut"
+     *     responses:
+     *       '200':
+     *         description: OK
+     */
     this.router.post(`${this.path}/logout`, this.loggingOut);
   }
 

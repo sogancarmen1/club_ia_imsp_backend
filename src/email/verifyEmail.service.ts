@@ -8,6 +8,8 @@ import { codeVerificationDto } from "./codeVerification.dto";
 import CodeNotFoundException from "../exceptions/CodeNotFoundException";
 import AddEmailDto from "./email.dto";
 import IEmailRepository from "./emailRepository.interface";
+import Email from "./email.interface";
+import EmailAlreadyExistException from "../exceptions/EmailAlreadyExistException";
 
 class VerifyEmailService {
   constructor(
@@ -29,10 +31,10 @@ class VerifyEmailService {
     return codeGeneratedForPhoneNumber;
   }
 
-  public validateCodeVerification(
+  public async validateCodeVerification(
     dataEmail: string,
     dataCode: codeVerificationDto
-  ): void {
+  ): Promise<Email> {
     const dataFound: InfoCodeVerification | null =
       this.repositoryMemoryEmail.getDataWhenPhoneNumberHasCode(
         dataEmail,
@@ -40,6 +42,12 @@ class VerifyEmailService {
       );
     if (!dataFound) throw new CodeNotFoundException(dataCode.code);
     this.repositoryMemoryEmail.deleteCodeVerification(dataFound.phoneNumber);
+    const emailExist = await this.repositoryEmail.isEmailExist(dataEmail);
+    if (emailExist) throw new EmailAlreadyExistException(dataEmail);
+    const emailAdd = await this.repositoryEmail.addEmail({
+      email: dataEmail,
+    });
+    return emailAdd;
   }
 
   private async generateCodeVerification(email: string): Promise<string> {

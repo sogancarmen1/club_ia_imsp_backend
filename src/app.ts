@@ -8,7 +8,7 @@ import { Pool } from "pg";
 import path from "path";
 import fs from "fs";
 import cors from "cors";
-
+import { swaggerDocs, swaggerUi } from "./swagger";
 
 class App {
   public app: express.Application;
@@ -35,6 +35,7 @@ class App {
   private initializeMiddleware(): void {
     this.app.use(bodyParser.json());
     this.app.use(cookieParser());
+    this.app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
   }
 
   private initializeErrorHanlding(): void {

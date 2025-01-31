@@ -1,16 +1,20 @@
-import EmailAlreadyException from "../exceptions/EmailAlreadyExistException";
+import EmailAlreadyExistException from "../exceptions/EmailAlreadyExistException";
 import AddEmailDto from "./email.dto";
 import Email from "./email.interface";
 import IEmailRepository from "./emailRepository.interface";
 import EmailNotFoundException from "../exceptions/EmailNotFoundException";
 import { Users } from "authentification/user.interface";
+import { IMemoryEmailRepository } from "./memoryEmail.interface";
 
 class EmailService {
-  constructor(private readonly repository: IEmailRepository) {}
+  constructor(
+    private readonly repository: IEmailRepository,
+    private readonly repositoryMemory: IMemoryEmailRepository
+  ) {}
 
   public async addEmail(emailAdd: AddEmailDto): Promise<Email> {
     if (await this.repository.isEmailExist(emailAdd.email))
-      throw new EmailAlreadyException(emailAdd.email);
+      throw new EmailAlreadyExistException(emailAdd.email);
     return await this.repository.addEmail(emailAdd);
   }
 
