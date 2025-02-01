@@ -7,16 +7,17 @@ import { AddFileDto, CreateArticleDto, UpdateArticleDto } from "./articles.dto";
 import { Result } from "../utils/utils";
 import HttpException from "../exceptions/HttpException";
 import upload from "../config/saveFilesInDiskServer/multer.config";
+import { authMiddleware } from "../middlewares/auth.middleware";
 
 class ArticlesController implements Controller {
   public path = "/articles";
   public router = express.Router();
   private articleService = new ArticleService(new PostgresArticlesRepository());
-  
+
   constructor() {
     this.initializeRoutes();
   }
-  
+
   public initializeRoutes() {
     /**
      * @swagger
@@ -24,13 +25,15 @@ class ArticlesController implements Controller {
      *   post:
      *     tags:
      *       - Articles
+     *     consumes:
+     *       - multipart/form-data
      *     summary: Create a new article
      *     operationId: "createArticle"
      *     requestBody:
      *       description: name and description are REQUIRED but files is OPTIONNAL.
      *       required: true
      *       content:
-     *         application/json:
+     *         multipart/form-data:
      *           schema:
      *             $ref: '#/components/schemas/CreateArticle'
      *     responses:
@@ -53,30 +56,17 @@ class ArticlesController implements Controller {
      *         contain:
      *           type: string
      *           example: "write a contain of document"
-     *         files:
+     *         media:
      *           type: array
-     *           properties:
-     *             url:
-     *              type: string
-     *              example: "the url"
-     *             type:
-     *              type: string
-     *              example: "img/png"
-     *             original_name:
-     *              type: string
-     *              example: "the original name"
-     *             files_names:
-     *              type: string
-     *              example: "the files names"
-     *             size:
-     *              type: integer
-     *              formt: int64
-     *              example: 4352
+     *           items:
+     *             type: string
+     *             format: binary
      */
     this.router.post(
       this.path,
       upload.array("media"),
       validateDto(CreateArticleDto),
+      authMiddleware,
       this.createArticle
     );
 
@@ -86,6 +76,8 @@ class ArticlesController implements Controller {
      *    put:
      *      tags:
      *        - Articles
+     *      consumes:
+     *        - multipart/form-data
      *      summary: Updating an existing article
      *      operationId: "updateArticleInformation"
      *      parameters:
@@ -97,10 +89,10 @@ class ArticlesController implements Controller {
      *            type: integer
      *            format: int64
      *      requestBody:
-     *        description: name and contain are REQUIRED but description is OPTIONNAL.
+     *        description: name and description are REQUIRED but files is OPTIONNAL.
      *        required: true
      *        content:
-     *          application/json:
+     *          multipart/form-data:
      *            schema:
      *              $ref: '#/components/schemas/CreateArticle'
      *      responses:
@@ -117,8 +109,13 @@ class ArticlesController implements Controller {
      *        '405':
      *          description: Validation exception
      */
-    this.router.put(`${this.path}/:id`, this.updateArticleInformation);
-
+    this.router.put(
+      `${this.path}/:id`,
+      upload.array("media"),
+      validateDto(UpdateArticleDto),
+      authMiddleware,
+      this.updateArticleInformation
+    );
 
     /**
      * @swagger
@@ -174,7 +171,7 @@ class ArticlesController implements Controller {
      *                      example: http://localhost:3000/images/myImage.png
      *                     type:
      *                      type: string
-     *                      example: img/png
+     *                      example: image/png
      *                     original_name:
      *                      type: string
      *                      example: original_name
@@ -186,8 +183,8 @@ class ArticlesController implements Controller {
      *                      format: int64
      *                      example: 2535
      */
-    this.router.get(this.path, this.getAllArticles);
-    
+    this.router.get(this.path, authMiddleware, this.getAllArticles);
+
     /**
      * @swagger
      * /articles/{id}:
@@ -216,8 +213,7 @@ class ArticlesController implements Controller {
      *       '404':
      *         description: Article not found
      */
-    this.router.get(`${this.path}/:id`, this.getArticleById);
-
+    this.router.get(`${this.path}/:id`, authMiddleware, this.getArticleById);
 
     /**
      * @swagger
@@ -243,7 +239,7 @@ class ArticlesController implements Controller {
      *       '404':
      *         description: Article not found
      */
-    this.router.delete(`${this.path}/:id`, this.deleteArticle);
+    this.router.delete(`${this.path}/:id`, authMiddleware, this.deleteArticle);
 
     /**
      * @swagger
@@ -269,7 +265,11 @@ class ArticlesController implements Controller {
      *       '404':
      *         description: Article not found
      */
-    this.router.delete(`${this.path}/:id/medias`, this.deleteAllMedias);
+    this.router.delete(
+      `${this.path}/:id/medias`,
+      authMiddleware,
+      this.deleteAllMedias
+    );
 
     /**
      * @swagger
@@ -303,6 +303,7 @@ class ArticlesController implements Controller {
      */
     this.router.delete(
       `${this.path}/:id/medias/:mediasid`,
+      authMiddleware,
       this.deleteAMediasInArticle
     );
   }
@@ -364,11 +365,31 @@ class ArticlesController implements Controller {
   ) => {
     try {
       const articleInfo: UpdateArticleDto = req.body;
-      const articleUpdated = await this.articleService.updateArticleInformation(
-        req.params.id,
-        articleInfo
-      );
-      res.status(201).send(new Result(true, "All updated", articleUpdated));
+      if (Array.isArray(req.files) && req.files.length > 0) {
+        const files: AddFileDto[] = this.buildFilesUrl(req);
+
+        const newArticle = await this.articleService.updateArticleInformation(
+          req.params.id,
+          articleInfo,
+          files
+        );
+        res
+          .status(201)
+          .send(
+            new Result(
+              true,
+              `Article with id ${req.params.id} is updated!`,
+              newArticle
+            )
+          );
+      } else {
+        const articleUpdated =
+          await this.articleService.updateArticleInformation(
+            req.params.id,
+            articleInfo
+          );
+        res.status(201).send(new Result(true, "All updated", articleUpdated));
+      }
     } catch (error) {
       if (error instanceof HttpException) {
         res.status(error.status).send(new Result(false, error.message, null));

@@ -10,6 +10,7 @@ import HttpException from "../exceptions/HttpException";
 import EmailService from "../email/email.service";
 import { SendNewlettersDto } from "./newsletters.dto";
 import memoryEmailRepositoryInstance from "../email/memoryEmail.repository";
+import { authMiddleware } from "../middlewares/auth.middleware";
 
 class NewslettersController implements Controller {
   public path: string = "/newsletter";
@@ -62,6 +63,7 @@ class NewslettersController implements Controller {
     this.router.post(
       this.path,
       validateDto(SendNewlettersDto),
+      authMiddleware,
       this.sendNewLetters
     );
 

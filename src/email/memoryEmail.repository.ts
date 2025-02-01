@@ -2,15 +2,16 @@ import {
   InfoCodeVerification,
   IMemoryEmailRepository,
 } from "./memoryEmail.interface";
+import cron from "node-cron";
 
 class MemoryEmailRepository implements IMemoryEmailRepository {
   private codesSmsVerification: InfoCodeVerification[];
   private ADDITIONNALMINUTES: number = 10;
   constructor() {
     this.codesSmsVerification = [];
-    if (this.getAllCodeVerification().length > 0) {
-      setInterval(() => this.deleteAutomaticallyCodeVerification(), 60);
-    }
+    cron.schedule("*/10 * * * *", () => {
+      this.deleteAutomaticallyCodeVerification();
+    });
   }
 
   public getDataWhenPhoneNumberHasCode(
@@ -37,7 +38,7 @@ class MemoryEmailRepository implements IMemoryEmailRepository {
     const index: number = this.codesSmsVerification.findIndex(
       (value) => value.phoneNumber == phoneNumber
     );
-    this.codesSmsVerification.splice(index, 1);
+    if (index != -1) this.codesSmsVerification.splice(index, 1);
   }
 
   public addCodeVerification(

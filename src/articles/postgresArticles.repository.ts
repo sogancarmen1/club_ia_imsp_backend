@@ -52,10 +52,19 @@ class PostgresArticlesRepository implements IArticlesRepository {
     return files;
   }
 
+  public async updateDate(articleId: string): Promise<void> {
+    try {
+      await this.pool.query(
+        "UPDATE articles.informations SET date_update = $1, WHERE id = $2;",
+        [new Date(), articleId]
+      );
+    } catch (error) {}
+  }
+
   public async deleteAllFilesInArticle(articleId: string): Promise<void> {
     try {
       await this.pool.query(
-        "DELETE FROM artciles.medias WHERE id_informations = $1",
+        "DELETE FROM articles.medias WHERE id_informations = $1",
         [articleId]
       );
     } catch (error) {}
@@ -75,13 +84,28 @@ class PostgresArticlesRepository implements IArticlesRepository {
 
   public async updateArticleInformation(
     articleId: string,
-    article: UpdateArticleDto
+    article: UpdateArticleDto,
+    files?: AddFileDto[]
   ): Promise<Article> {
     try {
       const result = await this.pool.query(
-        "UPDATE articles.informations SET title = $1, contain = $2, date_update = $3, WHERE id = $4 RETURNING * ",
+        "UPDATE articles.informations SET title = $1, contain = $2, date_update = $3 WHERE id = $4 RETURNING * ",
         [article.title, article.contain, new Date(), articleId]
       );
+      if (files) {
+        const addFileToArticleDto = this.convertAddFileDtoToString(
+          files,
+          Number(result.rows[0].id)
+        );
+        await this.insertionOfFilesAddToArticleInDatabase(addFileToArticleDto);
+        const result2 =
+          await this.getInformationsOrMediasBytitleOrOriginalNameOrId(
+            articleId,
+            "medias",
+            "id_informations"
+          );
+        return this.convertRowToArticle(result.rows[0], result2.rows);
+      }
       const result2 =
         await this.getInformationsOrMediasBytitleOrOriginalNameOrId(
           articleId,

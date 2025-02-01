@@ -39,4 +39,10 @@ DB_DATABASE=database_name
 DB_HOST=database_host
 DB_PORT=database_port
 ```
+
+Après la création de la base de donnée, vous pouvez exécuter les commandes suivantes :
+
+1. Pour initialiser la base de donnée : pnpm init-db
+
+2. Pour insérer l'administrateur : pnpm seed
 ````

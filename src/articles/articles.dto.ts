@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateArticleDto {
   @IsString()
@@ -12,9 +12,11 @@ export class CreateArticleDto {
 export class UpdateArticleDto {
   @IsString()
   @IsNotEmpty()
+  @IsOptional()
   public title: string;
   @IsString()
   @IsNotEmpty()
+  @IsOptional()
   public contain: string;
 }
 

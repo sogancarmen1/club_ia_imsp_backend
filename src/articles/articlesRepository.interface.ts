@@ -19,8 +19,10 @@ interface IArticlesRepository {
   deleteAFileInArticle(articleId: string, fileId: string): Promise<void>;
   updateArticleInformation(
     articleId: string,
-    article: UpdateArticleDto
+    article: UpdateArticleDto,
+    files?: AddFileDto[]
   ): Promise<Article>;
+  updateDate(articleId: string): Promise<void>;
 }
 
 export default IArticlesRepository;
