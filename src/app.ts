@@ -42,7 +42,7 @@ class App {
     this.app.use(errorMiddleware);
     this.app.use(
       cors({
-        origin: "*",
+        origin: process.env.URL,
         credentials: true,
       })
     );

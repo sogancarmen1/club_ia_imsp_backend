@@ -46,3 +46,7 @@ Après la création de la base de donnée, vous pouvez exécuter les commandes s
 
 2. Pour insérer l'administrateur : pnpm seed
 ````
+
+## Build
+
+1. pnpm build

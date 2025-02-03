@@ -2,7 +2,8 @@
   "scripts": {
     "init-db": "ts-node src/scripts/initDB.ts",
     "seed": "ts-node src/scripts/seed.ts",
-    "dev": "nodemon ./src/server.ts"
+    "dev": "nodemon ./src/server.ts",
+    "build": "tsc"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.735.0",

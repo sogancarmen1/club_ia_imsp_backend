@@ -18,26 +18,18 @@ async function initializeDatabase() {
     console.log("Connecting to the database...");
     await client.connect();
 
-    console.log("Executing SQL script to create SUPER ADMIN...");
-    const resultOfVerification = await client.query(
-      "SELECT * FROM subscriber WHERE email = $1",
-      [process.env.ADMIN_EMAIL]
+    console.log("Executing SQL script to create ADMIN...");
+    if (!process.env.ADMIN_PASSWORD)
+      throw new Error("Admin password not entered");
+    const passwordHashed = await bcryptService.hashPassword(
+      process.env.ADMIN_PASSWORD
     );
-    if (resultOfVerification.rowCount != 0)
-      throw new EmailAlreadyExistException(process.env.ADMIN_EMAIL);
     await client.query(
       `
         INSERT INTO subscriber(email, date_inscription, password) 
             VALUES ($1, $2, $3);
         `,
-      [process.env.ADMIN_EMAIL, new Date(), process.env.ADMIN_PASSWORD]
-    );
-    const result = await client.query(
-      `SELECT password FROM subscriber WHERE password IS NOT NULL;`
-    );
-    await client.query(
-      `UPDATE subscriber SET password = $1 WHERE password IS NOT NULL;`,
-      [await bcryptService.hashPassword(result.rows[0].password)]
+      [process.env.ADMIN_EMAIL, new Date(), passwordHashed]
     );
 
     console.log("Operation successfully!");

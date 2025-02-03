@@ -195,12 +195,36 @@ class EmailController implements Controller {
      *               example: "2024-12-01"
      */
 
+    /**
+     * @swagger
+     * /email:
+     *   post:
+     *     tags:
+     *       - Emails
+     *     summary: add a new email
+     *     operationId: "addEmail"
+     *     requestBody:
+     *       description: code is REQUIRED.
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/AddEmail'
+     *     responses:
+     *       '200':
+     *         description: successful operation
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/Emails'
+     */
+
     this.router.post(
       `${this.path}/verify`,
       validateDto(AddEmailDto),
       this.verifyEmail
     );
-    // this.router.post(this.path, validateDto(AddEmailDto), this.addEmail);
+    this.router.post(this.path, validateDto(AddEmailDto), this.addEmail);
     this.router.post(
       `${this.path}/:email`,
       validateDto(codeVerificationDto),
@@ -209,22 +233,22 @@ class EmailController implements Controller {
     this.router.get(this.path, authMiddleware, this.allEmail);
   }
 
-  // private addEmail = async (req: express.Request, res: express.Response) => {
-  //   try {
-  //     const emailDto: AddEmailDto = req.body;
-  //     await this.emailService.addEmail(emailDto);
-  //     res
-  //       .status(201)
-  //       .send(new Result(true, `Email ${emailDto.email} added!`, null));
-  //   } catch (error) {
-  //     console.log(error);
-  //     if (error instanceof HttpException) {
-  //       res.status(error.status).send(new Result(false, error.message, null));
-  //     } else {
-  //       res.status(500).send(new Result(false, "Internal server error", null));
-  //     }
-  //   }
-  // };
+  private addEmail = async (req: express.Request, res: express.Response) => {
+    try {
+      const emailDto: AddEmailDto = req.body;
+      await this.emailService.addEmail(emailDto);
+      res
+        .status(201)
+        .send(new Result(true, `Email ${emailDto.email} added!`, null));
+    } catch (error) {
+      console.log(error);
+      if (error instanceof HttpException) {
+        res.status(error.status).send(new Result(false, error.message, null));
+      } else {
+        res.status(500).send(new Result(false, "Internal server error", null));
+      }
+    }
+  };
 
   private allEmail = async (
     req: express.Request,
