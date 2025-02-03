@@ -11,11 +11,9 @@ export class CreateArticleDto {
 
 export class UpdateArticleDto {
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   public title: string;
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   public contain: string;
 }
