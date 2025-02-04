@@ -1,4 +1,3 @@
-
 interface ISendMail {
   sendMailTo(
     userEmail: string,

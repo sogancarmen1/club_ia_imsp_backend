@@ -1,25 +1,21 @@
 import ISendMail from "mail/sendMailPort.interface";
 import { SendNewlettersDto } from "./newsletters.dto";
-import EmailService from "email/email.service";
 import Email from "email/email.interface";
+import UserService from "users/user.service";
 
 class NewslettersService {
   constructor(
     private readonly emailSendService: ISendMail,
-    private readonly emailService: EmailService
+    private readonly userService: UserService
   ) {}
 
   public async sendNewsletters(message: SendNewlettersDto) {
-    const allEmails = await this.emailService.getAllEmails();
+    const allEmails = await this.userService.getAllEmail();
     return await this.emailSendService.sendMailTo(
       this.convertAllEmailsToOneStringCharactere(allEmails),
       message.subject,
       message.message
     );
-  }
-
-  public async unsubscriber(email: string) {
-    await this.emailService.deleteEmail(email);
   }
 
   private convertAllEmailsToOneStringCharactere(emails: Email[] | []): string {

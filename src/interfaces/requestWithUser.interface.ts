@@ -1,4 +1,4 @@
-import { Users } from "authentification/user.interface";
+import { Users } from "users/user.interface";
 import { Request } from "express";
 
 interface RequestWithUser extends Request {

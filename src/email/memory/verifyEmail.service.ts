@@ -5,18 +5,17 @@ import {
 } from "./memoryEmail.interface";
 import ISendMail from "mail/sendMailPort.interface";
 import { codeVerificationDto } from "./codeVerification.dto";
-import CodeNotFoundException from "../exceptions/CodeNotFoundException";
-import AddEmailDto from "./email.dto";
-import IEmailRepository from "./emailRepository.interface";
-import Email from "./email.interface";
-import EmailAlreadyExistException from "../exceptions/EmailAlreadyExistException";
+import CodeNotFoundException from "../../exceptions/CodeNotFoundException";
+import AddEmailDto from "../email.dto";
+import UserService from "users/user.service";
+import { Users } from "users/user.interface";
 
 class VerifyEmailService {
   constructor(
     private readonly repositoryMemoryEmail: IMemoryEmailRepository,
     private readonly generateCodeService: IGenerateCode,
     private readonly smsService: ISendMail,
-    private readonly repositoryEmail: IEmailRepository
+    private readonly userService: UserService
   ) {}
 
   public async verifyEmail(dataVerify: AddEmailDto): Promise<string> {
@@ -34,7 +33,7 @@ class VerifyEmailService {
   public async validateCodeVerification(
     dataEmail: string,
     dataCode: codeVerificationDto
-  ): Promise<Email> {
+  ): Promise<Users> {
     const dataFound: InfoCodeVerification | null =
       this.repositoryMemoryEmail.getDataWhenPhoneNumberHasCode(
         dataEmail,
@@ -42,16 +41,12 @@ class VerifyEmailService {
       );
     if (!dataFound) throw new CodeNotFoundException(dataCode.code);
     this.repositoryMemoryEmail.deleteCodeVerification(dataFound.phoneNumber);
-    const emailExist = await this.repositoryEmail.isEmailExist(dataEmail);
-    if (emailExist) throw new EmailAlreadyExistException(dataEmail);
-    const emailAdd = await this.repositoryEmail.addEmail({
+    return await this.userService.addEmail({
       email: dataEmail,
     });
-    return emailAdd;
   }
 
   private async generateCodeVerification(email: string): Promise<string> {
-    await this.repositoryEmail.isEmailExist(email);
     let codeGenerated: string = "";
     let existingCodeCount: number = 0;
     do {

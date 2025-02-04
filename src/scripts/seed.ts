@@ -26,10 +26,10 @@ async function initializeDatabase() {
     );
     await client.query(
       `
-        INSERT INTO subscriber(email, date_inscription, password) 
-            VALUES ($1, $2, $3);
+        INSERT INTO subscriber(email, date_inscription, password, role, state) 
+            VALUES ($1, $2, $3, $4, $5);
         `,
-      [process.env.ADMIN_EMAIL, new Date(), passwordHashed]
+      [process.env.ADMIN_EMAIL, new Date(), passwordHashed, "admin", "active"]
     );
 
     console.log("Operation successfully!");

@@ -1,26 +1,34 @@
-import EmailService from "email/email.service";
 import { LoginDto } from "./login.dto";
 import { IHashPasswordService } from "hashPassword/hashPasswordService.interface";
 import DataStoredInToken from "token/dataStorageInToken.interface";
 import jwt from "jsonwebtoken";
 import TokenData from "token/token.interface";
 import WrongCredentialsException from "../exceptions/WrongCredentialException";
+import UserService from "../users/user.service";
+import AccountIsNotActiveException from "../exceptions/AccountIsNotActiveException";
+import IUserRepository from "../users/usersRepository.interface";
+import UserNotFoundException from "../exceptions/UserNotFoundException";
+import AccessDenied from "../exceptions/AccessDeniedException";
 
 class AuthentificationService {
   constructor(
-    private readonly emailService: EmailService,
-    private readonly hashPasswordService: IHashPasswordService
+    private readonly hashPasswordService: IHashPasswordService,
+    private readonly repositoryUser: IUserRepository
   ) {}
 
   public async loginAdmin(loginData: LoginDto) {
-    const emailAdmin = await this.emailService.getAdmin(loginData.email);
-    if (emailAdmin) {
+    const user = await this.repositoryUser.getUserByEmail(loginData.email);
+    if (!user) throw new UserNotFoundException();
+    if (user.role == "user") throw new AccessDenied();
+    if (user.state == "inactive")
+      throw new AccountIsNotActiveException(user.email);
+    if (user && user.role != "user") {
       const isPasswordMatching = await this.hashPasswordService.verifyPassword(
         loginData.password,
-        emailAdmin.password
+        user.password
       );
       if (isPasswordMatching) {
-        const tokenData = this.createToken(loginData.email);
+        const tokenData = this.createToken(user.id, user.role);
         const cookie = this.createCookie(tokenData);
         return cookie;
       } else throw new WrongCredentialsException();
@@ -31,11 +39,12 @@ class AuthentificationService {
     return `Authorization=${tokenData.token}; Path=/; HttpOnly; Max-Age=${tokenData.expiresIn}; SameSite=None; Secure=true; Partitioned`;
   }
 
-  private createToken(emailAdmin: string): TokenData {
+  public createToken(userId: string, role: string): TokenData {
     const expireIn = 60 * 60;
     const secret = process.env.JWT_SECRET;
     const dataStoredInToken: DataStoredInToken = {
-      _email: emailAdmin,
+      _id: userId,
+      _role: role,
     };
     return {
       expiresIn: expireIn,

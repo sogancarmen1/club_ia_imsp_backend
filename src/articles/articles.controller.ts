@@ -8,6 +8,7 @@ import { Result } from "../utils/utils";
 import HttpException from "../exceptions/HttpException";
 import upload from "../config/saveFilesInDiskServer/multer.config";
 import { authMiddleware } from "../middlewares/auth.middleware";
+import authorizeRoles from "../middlewares/role.middleware";
 
 class ArticlesController implements Controller {
   public path = "/articles";
@@ -67,6 +68,7 @@ class ArticlesController implements Controller {
       upload.array("media"),
       validateDto(CreateArticleDto),
       authMiddleware,
+      authorizeRoles("admin", "editor"),
       this.createArticle
     );
 
@@ -114,6 +116,7 @@ class ArticlesController implements Controller {
       upload.array("media"),
       validateDto(UpdateArticleDto),
       authMiddleware,
+      authorizeRoles("admin", "editor"),
       this.updateArticleInformation
     );
 
@@ -183,7 +186,7 @@ class ArticlesController implements Controller {
      *                      format: int64
      *                      example: 2535
      */
-    this.router.get(this.path, authMiddleware, this.getAllArticles);
+    this.router.get(this.path, this.getAllArticles);
 
     /**
      * @swagger
@@ -213,7 +216,7 @@ class ArticlesController implements Controller {
      *       '404':
      *         description: Article not found
      */
-    this.router.get(`${this.path}/:id`, authMiddleware, this.getArticleById);
+    this.router.get(`${this.path}/:id`, this.getArticleById);
 
     /**
      * @swagger
@@ -239,7 +242,12 @@ class ArticlesController implements Controller {
      *       '404':
      *         description: Article not found
      */
-    this.router.delete(`${this.path}/:id`, authMiddleware, this.deleteArticle);
+    this.router.delete(
+      `${this.path}/:id`,
+      authMiddleware,
+      authorizeRoles("admin", "editor"),
+      this.deleteArticle
+    );
 
     /**
      * @swagger
@@ -268,6 +276,7 @@ class ArticlesController implements Controller {
     this.router.delete(
       `${this.path}/:id/medias`,
       authMiddleware,
+      authorizeRoles("admin", "editor"),
       this.deleteAllMedias
     );
 
@@ -304,6 +313,7 @@ class ArticlesController implements Controller {
     this.router.delete(
       `${this.path}/:id/medias/:mediasid`,
       authMiddleware,
+      authorizeRoles("admin", "editor"),
       this.deleteAMediasInArticle
     );
   }

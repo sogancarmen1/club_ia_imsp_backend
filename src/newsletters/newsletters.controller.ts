@@ -3,23 +3,32 @@ import Controller from "interfaces/controllers.interface";
 import express from "express";
 import NewslettersService from "./newsletters.service";
 import EmailSendNodeMailerService from "../mail/sendMailNodeMailer.service";
-import PostgresEmailRepository from "../email/postgresEmail.repository";
 import validateDto from "../middlewares/validation.middleware";
 import { Result } from "../utils/utils";
 import HttpException from "../exceptions/HttpException";
-import EmailService from "../email/email.service";
 import { SendNewlettersDto } from "./newsletters.dto";
-import memoryEmailRepositoryInstance from "../email/memoryEmail.repository";
+import UserService from "../users/user.service";
+import PostgresUserRepository from "../users/postgresUser.repository";
+import GenerateCodeNanoIdService from "../generateCode/generateCode.service";
+import HashPasswordBcryptService from "../hashPassword/hashPasswordBcrypt.service";
+import authorizeRoles from "../middlewares/role.middleware";
 import { authMiddleware } from "../middlewares/auth.middleware";
+import AuthentificationService from "../authentification/authentification.service";
 
 class NewslettersController implements Controller {
   public path: string = "/newsletter";
   public router: Router = express.Router();
   private newslettersService = new NewslettersService(
     new EmailSendNodeMailerService(),
-    new EmailService(
-      new PostgresEmailRepository(),
-      memoryEmailRepositoryInstance
+    new UserService(
+      new PostgresUserRepository(),
+      new GenerateCodeNanoIdService(),
+      new HashPasswordBcryptService(),
+      new AuthentificationService(
+        new HashPasswordBcryptService(),
+        new PostgresUserRepository()
+      ),
+      new EmailSendNodeMailerService()
     )
   );
 
@@ -64,6 +73,7 @@ class NewslettersController implements Controller {
       this.path,
       validateDto(SendNewlettersDto),
       authMiddleware,
+      authorizeRoles("admin", "editor"),
       this.sendNewLetters
     );
 
@@ -90,25 +100,25 @@ class NewslettersController implements Controller {
      *       '404':
      *         description: Article not found
      */
-    this.router.delete(`${this.path}/:email`, this.unsubscriber);
+    // this.router.delete(`${this.path}/:email`, this.unsubscriber);
   }
 
-  private unsubscriber = async (
-    req: express.Request,
-    res: express.Response
-  ) => {
-    try {
-      const email = req.params.email;
-      await this.newslettersService.unsubscriber(email);
-      res.status(204).send(new Result(true, "Email has delete!", null));
-    } catch (error) {
-      if (error instanceof HttpException) {
-        res.status(error.status).send(new Result(false, error.message, null));
-      } else {
-        res.status(500).send(new Result(false, "Internal server error", null));
-      }
-    }
-  };
+  // private unsubscriber = async (
+  //   req: express.Request,
+  //   res: express.Response
+  // ) => {
+  //   try {
+  //     const email = req.params.email;
+  //     await this.newslettersService.unsubscriber(email);
+  //     res.status(204).send(new Result(true, "Email has delete!", null));
+  //   } catch (error) {
+  //     if (error instanceof HttpException) {
+  //       res.status(error.status).send(new Result(false, error.message, null));
+  //     } else {
+  //       res.status(500).send(new Result(false, "Internal server error", null));
+  //     }
+  //   }
+  // };
 
   private sendNewLetters = async (
     req: express.Request,
@@ -117,7 +127,7 @@ class NewslettersController implements Controller {
     try {
       const letterInformations: SendNewlettersDto = req.body;
       await this.newslettersService.sendNewsletters(letterInformations);
-      res.status(201).send(new Result(true, "New letters is sent!", null));
+      res.status(201).send(new Result(true, "New letters are sent!", null));
     } catch (error) {
       if (error instanceof HttpException) {
         res.status(error.status).send(new Result(false, error.message, null));

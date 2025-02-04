@@ -1,24 +1,21 @@
 import express, { Router } from "express";
 import AuthentificationService from "./authentification.service";
-import EmailService from "../email/email.service";
 import HashPasswordBcryptService from "../hashPassword/hashPasswordBcrypt.service";
-import PostgresEmailRepository from "../email/postgresEmail.repository";
 import Controller from "interfaces/controllers.interface";
 import validateDto from "../middlewares/validation.middleware";
 import { LoginDto } from "./login.dto";
 import { Result } from "../utils/utils";
 import HttpException from "../exceptions/HttpException";
-import memoryEmailRepositoryInstance from "../email/memoryEmail.repository";
+import UserService from "../users/user.service";
+import PostgresUserRepository from "../users/postgresUser.repository";
+import GenerateCodeNanoIdService from "../generateCode/generateCode.service";
 
 class AuthentificationController implements Controller {
   public path = "/auth";
   public router = express.Router();
   private authentificationService = new AuthentificationService(
-    new EmailService(
-      new PostgresEmailRepository(),
-      memoryEmailRepositoryInstance
-    ),
-    new HashPasswordBcryptService()
+    new HashPasswordBcryptService(),
+    new PostgresUserRepository()
   );
 
   constructor() {

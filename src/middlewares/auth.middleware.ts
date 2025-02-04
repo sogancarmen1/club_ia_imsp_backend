@@ -13,15 +13,11 @@ export function authMiddleware(
 ) {
   const cookies = request.cookies;
   if (cookies && cookies.Authorization) {
-    try {
-      const email = decodedToken(cookies.Authorization);
-      if (email == process.env.ADMIN_EMAIL) {
-        next();
-      } else {
-        response.send(new Result(false, "Wrong credentials provided!", null));
-      }
-    } catch (error) {
-      next(new WrongAuthenticationTokenException());
+    const user = decodedToken(cookies.Authorization);
+    if (Number(user._id) > 0) {
+      next();
+    } else {
+      response.send(new Result(false, "Wrong credentials provided!", null));
     }
   } else {
     response.send(new Result(false, "Wrong authentication token!", null));
@@ -33,7 +29,7 @@ export function decodedToken(token: string) {
   try {
     const secret = process.env.JWT_SECRET;
     const verificationResponse = jwt.verify(token, secret) as DataStoredInToken;
-    return verificationResponse._email;
+    return verificationResponse;
   } catch {
     return null;
   }
