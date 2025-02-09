@@ -23,9 +23,19 @@ class PostgresArticlesRepository implements IArticlesRepository {
       id: rowArticleCreated.id,
       title: rowArticleCreated.title,
       contain: rowArticleCreated.contain,
+      type: rowArticleCreated.type,
+      date_publication: rowArticleCreated.date_publication.toLocaleDateString(
+        "fr-FR",
+        {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }
+      ),
       files: rowAddFilesToArticle
         ? rowAddFilesToArticle.map((file) => {
             return {
+              id: file.id,
               url: file.url,
               type: file.type,
               original_name: file.original_name,
@@ -42,6 +52,7 @@ class PostgresArticlesRepository implements IArticlesRepository {
   private convertRowToFiles(rowFilesFound: any): AddFileDto[] {
     const files: AddFileDto[] = rowFilesFound.map((file) => {
       return {
+        id: file.id,
         url: file.url,
         type: file.type,
         original_name: file.original_name,
@@ -73,12 +84,13 @@ class PostgresArticlesRepository implements IArticlesRepository {
   public async deleteAFileInArticle(
     articleId: string,
     fileId: string
-  ): Promise<void> {
+  ): Promise<string> {
     try {
-      await this.pool.query(
-        "DELETE FROM articles.medias WHERE id_informations = $1 AND id = $2",
+      const result = await this.pool.query(
+        "DELETE FROM articles.medias WHERE id_informations = $1 AND id = $2 RETURNING files_names;",
         [articleId, fileId]
       );
+      return result.rows[0].files_names;
     } catch (error) {}
   }
 
@@ -175,6 +187,13 @@ class PostgresArticlesRepository implements IArticlesRepository {
     } catch (error) {}
   }
 
+  public async getNumberOfAllMedias(): Promise<Number> {
+    try {
+      const result = await this.pool.query("select * from articles.medias;");
+      return result.rowCount;
+    } catch (error) {}
+  }
+
   private async getInformationsOrMediasBytitleOrOriginalNameOrId(
     informationsOrMedias: string,
     table: string,
@@ -227,13 +246,16 @@ class PostgresArticlesRepository implements IArticlesRepository {
         articleInformations.rows[0],
         articleMedias.rows
       );
-    } catch (error) {}
+    } catch (error) {
+      console.log(error);
+    }
   }
 
-  public async getAllArticles(): Promise<Article[] | []> {
+  public async getAllArticlesOrProjects(type: string): Promise<Article[] | []> {
     try {
       const resultInformations = await this.pool.query(
-        "SELECT * FROM articles.informations;"
+        "SELECT * FROM articles.informations WHERE type = $1;",
+        [type]
       );
       if (resultInformations.rowCount == 0) return [];
       let allArticle: Article[] = [];
@@ -242,6 +264,14 @@ class PostgresArticlesRepository implements IArticlesRepository {
           id: resultInformations.rows[i].id,
           title: resultInformations.rows[i].title,
           contain: resultInformations.rows[i].contain,
+          type: resultInformations.rows[i].type,
+          date_publication: resultInformations.rows[
+            i
+          ].date_publication.toLocaleDateString("fr-FR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          }),
           files: this.convertRowToFiles(
             (
               await this.getInformationsOrMediasBytitleOrOriginalNameOrId(
@@ -281,8 +311,8 @@ class PostgresArticlesRepository implements IArticlesRepository {
   private async insertArticleInDatabase(article: CreateArticleDto) {
     try {
       return await this.pool.query(
-        "INSERT INTO articles.informations(title, contain, date_publication, date_update) VALUES ($1, $2, $3, $4) returning id, title, contain, date_publication, date_update;",
-        [article.title, article.contain, new Date(), new Date()]
+        "INSERT INTO articles.informations(title, contain, date_publication, date_update, type) VALUES ($1, $2, $3, $4, $5) returning id, title, contain, date_publication, date_update, type;",
+        [article.title, article.contain, new Date(), new Date(), article.type]
       );
     } catch (error) {}
   }

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsIn, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateArticleDto {
   @IsString()
@@ -7,15 +7,21 @@ export class CreateArticleDto {
   @IsString()
   @IsNotEmpty()
   public contain: string;
+  @IsString()
+  @IsNotEmpty()
+  @IsIn(["article", "project"], {
+    message: 'Type must be either "article" or "project"',
+  })
+  public type: string;
 }
 
 export class UpdateArticleDto {
   @IsString()
   @IsOptional()
-  public title: string;
+  public title?: string;
   @IsString()
   @IsOptional()
-  public contain: string;
+  public contain?: string;
 }
 
 export class AddFileDto {

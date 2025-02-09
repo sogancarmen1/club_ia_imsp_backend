@@ -7,6 +7,10 @@ import ArticleNotFoundException from "../exceptions/ArticleNotFoundException";
 class ArticleService {
   constructor(private readonly repository: IArticlesRepository) {}
 
+  public async getLenghtOfAllMedias(): Promise<Number> {
+    return await this.repository.getNumberOfAllMedias();
+  }
+
   public async checkIfArticleTitleAlreadyExist(title: string): Promise<void> {
     const articleExist: boolean =
       await this.repository.isArticleFoundByTitleExist(title);
@@ -91,10 +95,14 @@ class ArticleService {
   public async deleteFileInArticle(
     articleId: string,
     fileId: string
-  ): Promise<void> {
+  ): Promise<string> {
     await this.ArticleNotFound(articleId);
-    await this.repository.deleteAFileInArticle(articleId, fileId);
+    const fileDeleted = await this.repository.deleteAFileInArticle(
+      articleId,
+      fileId
+    );
     await this.repository.updateDate(articleId);
+    return fileDeleted;
   }
 
   public async deleteAllFilesInArticle(articleId: string): Promise<void> {
@@ -118,8 +126,8 @@ class ArticleService {
     return articleFoundById;
   }
 
-  public async getAllArticle(): Promise<Article[] | []> {
-    return await this.repository.getAllArticles();
+  public async getAllArticleOrProjects(type: string): Promise<Article[] | []> {
+    return await this.repository.getAllArticlesOrProjects(type);
   }
 
   public async deleteArticle(articleId: string) {

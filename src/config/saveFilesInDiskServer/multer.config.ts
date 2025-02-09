@@ -6,7 +6,15 @@ const storage = multer.diskStorage({
     cb(null, path.join(__dirname, "/images"));
   },
   filename: (req, file, cb) => {
-    cb(null, file.originalname);
+    cb(
+      null,
+      file.originalname
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/'/g, "")
+        .replace(/\s+/g, "")
+        .replace(/[©-]/g, "")
+    );
   },
 });
 

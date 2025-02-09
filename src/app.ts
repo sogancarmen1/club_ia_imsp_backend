@@ -57,13 +57,25 @@ class App {
   private initalizeStaticFiles() {
     const uploadDir = path.join(
       __dirname,
-      "src/config/saveFilesInDiskServer/images"
+      "config/saveFilesInDiskServer/images"
     );
 
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
-    this.app.use("/images", express.static(uploadDir));
+    this.app.use(
+      "config/saveFilesInDiskServer/images",
+      express.static(uploadDir)
+    );
+
+    this.app.get("/test-image/:filename", (req, res) => {
+      res.sendFile(
+        path.join(
+          __dirname,
+          `config/saveFilesInDiskServer/images/${req.params.filename}`
+        )
+      );
+    });
   }
 
   private async connectToTheDataBase() {

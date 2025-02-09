@@ -60,7 +60,7 @@ class UserService {
 
   public async activeAccount(newPassword: ChangePasswordDto): Promise<Users> {
     const tokenDecoded = decodedToken(newPassword.token);
-    const user = await this.getUserById(tokenDecoded._id);
+    const user = await this.getUserById(tokenDecoded?._id);
     if (user.role == "user") throw new AccessDenied();
     const passwordHashed = await this.hashPasswordService.hashPassword(
       newPassword.password

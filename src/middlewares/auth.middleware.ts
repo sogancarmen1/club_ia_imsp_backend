@@ -14,7 +14,7 @@ export function authMiddleware(
   const cookies = request.cookies;
   if (cookies && cookies.Authorization) {
     const user = decodedToken(cookies.Authorization);
-    if (Number(user._id) > 0) {
+    if (Number(user?._id) > 0) {
       next();
     } else {
       response.send(new Result(false, "Wrong credentials provided!", null));

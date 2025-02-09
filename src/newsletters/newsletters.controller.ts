@@ -16,7 +16,7 @@ import { authMiddleware } from "../middlewares/auth.middleware";
 import AuthentificationService from "../authentification/authentification.service";
 
 class NewslettersController implements Controller {
-  public path: string = "/newsletter";
+  public paths: string = "/newsletter";
   public router: Router = express.Router();
   private newslettersService = new NewslettersService(
     new EmailSendNodeMailerService(),
@@ -70,7 +70,7 @@ class NewslettersController implements Controller {
      *           example: "write a contain of mail"
      */
     this.router.post(
-      this.path,
+      this.paths,
       validateDto(SendNewlettersDto),
       authMiddleware,
       authorizeRoles("admin", "editor"),

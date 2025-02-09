@@ -11,7 +11,7 @@ import PostgresUserRepository from "../users/postgresUser.repository";
 import GenerateCodeNanoIdService from "../generateCode/generateCode.service";
 
 class AuthentificationController implements Controller {
-  public path = "/auth";
+  public paths = "/auth";
   public router = express.Router();
   private authentificationService = new AuthentificationService(
     new HashPasswordBcryptService(),
@@ -78,7 +78,7 @@ class AuthentificationController implements Controller {
      *   - cookieAuth: []
      */
     this.router.post(
-      `${this.path}/login`,
+      `${this.paths}/login`,
       validateDto(LoginDto),
       this.logginIn
     );
@@ -95,7 +95,7 @@ class AuthentificationController implements Controller {
      *       '200':
      *         description: OK
      */
-    this.router.post(`${this.path}/logout`, this.loggingOut);
+    this.router.post(`${this.paths}/logout`, this.loggingOut);
   }
 
   private logginIn = async (
@@ -126,7 +126,7 @@ class AuthentificationController implements Controller {
     response: express.Response
   ) => {
     response.setHeader("Set-Cookie", [
-      "Authorization=; Path=/; HttpOnly; Max-Age=0; SameSite=None; Secure=true; Partitioned",
+      "Authorization=; Path=/; Max-Age=0; SameSite=None; Secure=true; Partitioned",
     ]);
     response.sendStatus(200);
   };

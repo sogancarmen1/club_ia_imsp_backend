@@ -9,9 +9,11 @@ import HttpException from "../exceptions/HttpException";
 import upload from "../config/saveFilesInDiskServer/multer.config";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import authorizeRoles from "../middlewares/role.middleware";
+import path from "path";
+import fs from "fs";
 
 class ArticlesController implements Controller {
-  public path = "/articles";
+  public paths = "/articles";
   public router = express.Router();
   private articleService = new ArticleService(new PostgresArticlesRepository());
 
@@ -20,6 +22,7 @@ class ArticlesController implements Controller {
   }
 
   public initializeRoutes() {
+    this.router.get(`${this.paths}/medias`, this.getLengthOfAllMedias);
     /**
      * @swagger
      * /articles:
@@ -64,7 +67,7 @@ class ArticlesController implements Controller {
      *             format: binary
      */
     this.router.post(
-      this.path,
+      this.paths,
       upload.array("media"),
       validateDto(CreateArticleDto),
       authMiddleware,
@@ -112,7 +115,7 @@ class ArticlesController implements Controller {
      *          description: Validation exception
      */
     this.router.put(
-      `${this.path}/:id`,
+      `${this.paths}/:id`,
       upload.array("media"),
       validateDto(UpdateArticleDto),
       authMiddleware,
@@ -186,7 +189,7 @@ class ArticlesController implements Controller {
      *                      format: int64
      *                      example: 2535
      */
-    this.router.get(this.path, this.getAllArticles);
+    this.router.get(`${this.paths}/:type`, this.getAllArticlesOrProjects);
 
     /**
      * @swagger
@@ -216,7 +219,7 @@ class ArticlesController implements Controller {
      *       '404':
      *         description: Article not found
      */
-    this.router.get(`${this.path}/:id`, this.getArticleById);
+    this.router.get(`${this.paths}/by/:id`, this.getArticleById);
 
     /**
      * @swagger
@@ -243,7 +246,7 @@ class ArticlesController implements Controller {
      *         description: Article not found
      */
     this.router.delete(
-      `${this.path}/:id`,
+      `${this.paths}/:id`,
       authMiddleware,
       authorizeRoles("admin", "editor"),
       this.deleteArticle
@@ -274,7 +277,7 @@ class ArticlesController implements Controller {
      *         description: Article not found
      */
     this.router.delete(
-      `${this.path}/:id/medias`,
+      `${this.paths}/:id/medias`,
       authMiddleware,
       authorizeRoles("admin", "editor"),
       this.deleteAllMedias
@@ -311,12 +314,30 @@ class ArticlesController implements Controller {
      *         description: Article not found
      */
     this.router.delete(
-      `${this.path}/:id/medias/:mediasid`,
+      `${this.paths}/:id/medias/:mediasid`,
       authMiddleware,
       authorizeRoles("admin", "editor"),
       this.deleteAMediasInArticle
     );
   }
+
+  private getLengthOfAllMedias = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
+    try {
+      const lengthOfMedias = await this.articleService.getLenghtOfAllMedias();
+      res
+        .status(201)
+        .send(new Result(true, `Length of all medias`, lengthOfMedias));
+    } catch (error) {
+      if (error instanceof HttpException) {
+        res.status(error.status).send(new Result(false, error.message, null));
+      } else {
+        res.status(500).send(new Result(false, "Internal server error", null));
+      }
+    }
+  };
 
   private deleteAMediasInArticle = async (
     req: express.Request,
@@ -433,14 +454,19 @@ class ArticlesController implements Controller {
     }
   };
 
-  private getAllArticles = async (
+  private getAllArticlesOrProjects = async (
     req: express.Request,
     res: express.Response
   ) => {
     try {
-      const allArticles = await this.articleService.getAllArticle();
-      res.status(201).send(new Result(true, "All article", allArticles));
+      const allArticles = await this.articleService.getAllArticleOrProjects(
+        req.params.type
+      );
+      res
+        .status(201)
+        .send(new Result(true, `All ${req.params.type}`, allArticles));
     } catch (error) {
+      console.log(error);
       res.status(500).send(new Result(false, "Internal server error", null));
     }
   };
@@ -510,11 +536,14 @@ class ArticlesController implements Controller {
     try {
       return req.files.map((file) => {
         return {
-          url: `${req.protocol}://${req.get("host")}/images/${file.originalname
+          url: `${req.protocol}://${req.get(
+            "host"
+          )}/src/config/saveFilesInDiskServer/images/${file.originalname
             .replace(/\s+/g, "")
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "")
-            .replace(/'/g, "")}`,
+            .replace(/'/g, "")
+            .replace(/[©-]/g, "")}`,
           type: file.mimetype,
           original_name: file.originalname
             .normalize("NFD")
@@ -523,7 +552,9 @@ class ArticlesController implements Controller {
           files_names: file.filename
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "")
-            .replace(/'/g, ""),
+            .replace(/'/g, "")
+            .replace(/\s+/g, "")
+            .replace(/[©-]/g, ""),
           size: file.size,
         };
       });

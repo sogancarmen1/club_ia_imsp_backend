@@ -20,7 +20,7 @@ import authorizeRoles from "../middlewares/role.middleware";
 import AuthentificationService from "../authentification/authentification.service";
 
 class UserController implements Controller {
-  public path: string = "/user";
+  public paths: string = "/user";
   public router: Router = express.Router();
   private verifyEmailService = new VerifyEmailService(
     memoryEmailRepositoryInstance,
@@ -239,46 +239,66 @@ class UserController implements Controller {
      */
 
     this.router.post(
-      `${this.path}/verify`,
+      `${this.paths}/verify`,
       validateDto(AddEmailDto),
       this.verifyEmail
     );
     // this.router.post(this.path, validateDto(AddEmailDto), this.addEmail);
     this.router.post(
-      `${this.path}/:email`,
+      `${this.paths}/:email`,
       validateDto(codeVerificationDto),
       this.validateEmail
     );
     this.router.get(
-      this.path,
+      this.paths,
       authMiddleware,
       authorizeRoles("admin", "editor"),
       this.allEmail
     );
+    this.router.get(
+      `${this.paths}/editor`,
+      authMiddleware,
+      authorizeRoles("admin"),
+      this.getAllEditor
+    );
     this.router.post(
-      this.path,
+      this.paths,
       validateDto(AddEmailDto),
       authMiddleware,
       authorizeRoles("admin"),
       this.createEditor
     );
     this.router.put(
-      `${this.path}/active`,
+      `${this.paths}/active`,
       validateDto(ChangePasswordDto),
       this.activeAccount
     );
     this.router.delete(
-      `${this.path}/:id`,
+      `${this.paths}/:id`,
       authMiddleware,
       authorizeRoles("admin"),
       this.deleteUser
     );
     this.router.post(
-      `${this.path}/forgot-password`,
+      `${this.paths}/forgot-password`,
       validateDto(AddEmailDto),
       this.forgotPassword
     );
+    this.router.get(`${this.paths}/:id`, authMiddleware, this.getUserById);
   }
+
+  private getUserById = async (req: express.Request, res: express.Response) => {
+    try {
+      const user = await this.userService.getUserById(req.params.id);
+      res.status(201).send(new Result(true, "The user!", user));
+    } catch (error) {
+      if (error instanceof HttpException) {
+        res.status(error.status).send(new Result(false, error.message, null));
+      } else {
+        res.status(500).send(new Result(false, "Internal server error", null));
+      }
+    }
+  };
 
   //   private addEmail = async (req: express.Request, res: express.Response) => {
   //     try {
@@ -296,6 +316,21 @@ class UserController implements Controller {
   //       }
   //     }
   //   };
+  private getAllEditor = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
+    try {
+      const editors = await this.userService.getAllUserEditor();
+      res.status(201).send(new Result(true, "All editors!", editors));
+    } catch (error) {
+      if (error instanceof HttpException) {
+        res.status(error.status).send(new Result(false, error.message, null));
+      } else {
+        res.status(500).send(new Result(false, "Internal server error", null));
+      }
+    }
+  };
 
   private forgotPassword = async (
     req: express.Request,
@@ -342,6 +377,7 @@ class UserController implements Controller {
       await this.userService.activeAccount(informations);
       res.status(201).send(new Result(true, "Your account is active", null));
     } catch (error) {
+      // console.log(error);
       if (error instanceof HttpException) {
         res.status(error.status).send(new Result(false, error.message, null));
       } else {

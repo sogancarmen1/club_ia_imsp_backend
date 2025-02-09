@@ -8,6 +8,7 @@ CREATE TABLE articles.informations (
 	contain text NOT NULL,
 	date_publication date NOT NULL,
 	date_update date NOT NULL,
+	type varchar NOT NULL,
 	CONSTRAINT articles_pk PRIMARY KEY (id)
 );
 

@@ -21,6 +21,11 @@ class PostgresUserRepository implements IUserRepository {
     return {
       id: rowUser.id,
       email: rowUser.email,
+      data_inscription: rowUser.date_inscription.toLocaleDateString("fr-FR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }),
       role: rowUser.role,
       state: rowUser.state,
       password: rowUser.password,
