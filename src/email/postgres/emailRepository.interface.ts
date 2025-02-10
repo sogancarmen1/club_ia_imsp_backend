@@ -1,4 +1,4 @@
-import AddEmailDto from "../email.dto";
+import { AddEmailDto } from "../email.dto";
 import Email from "../email.interface";
 
 interface IEmailRepository {
