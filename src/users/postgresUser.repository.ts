@@ -1,7 +1,7 @@
 import { Pool } from "pg";
 import IUserRepository from "./usersRepository.interface";
 import { Users } from "./user.interface";
-import AddEmailDto from "email/email.dto";
+import {AddEmailDto} from "email/email.dto";
 import { UpdateUserAccountDto } from "./user.dto";
 import Email from "email/email.interface";
 

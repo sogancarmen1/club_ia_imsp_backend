@@ -7,4 +7,4 @@ export class AddEmailDto {
   public email: string;
 }
 
-export default AddEmailDto;
+

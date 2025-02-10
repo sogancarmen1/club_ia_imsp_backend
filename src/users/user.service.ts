@@ -1,4 +1,4 @@
-import AddEmailDto from "email/email.dto";
+import { AddEmailDto } from "email/email.dto";
 import IUserRepository from "./usersRepository.interface";
 import EmailAlreadyExistException from "../exceptions/EmailAlreadyExistException";
 import { Users } from "./user.interface";
@@ -6,7 +6,7 @@ import { IHashPasswordService } from "hashPassword/hashPasswordService.interface
 import { IGenerateCode } from "generateCode/generateCode.interface";
 import Email from "email/email.interface";
 import UserNotFoundException from "../exceptions/UserNotFoundException";
-import VerifyEmailService from "email/memory/verifyEmail.service";
+// import VerifyEmailService from "email/memory/verifyEmail.service";
 import { ChangePasswordDto, UpdateUserAccountDto } from "./user.dto";
 import PasswordIsNotNull from "exceptions/PasswordIsNotNullException";
 import AuthentificationService from "../authentification/authentification.service";
@@ -38,7 +38,7 @@ class UserService {
     const token = this.authentificationService.createToken(user.id, user.role);
     await this.sendMailService.sendMailTo(
       user.email,
-      `The url to activate your accout : http://localhost:3000/reset-password?token=${token.token}`,
+      `The url to activate your account : ${process.env.URL}/reset-password?token=${token.token}`,
       "Active your account"
     );
     return user;
@@ -47,15 +47,19 @@ class UserService {
   public async receiveEmailWhenForgotPassword(
     email: AddEmailDto
   ): Promise<void> {
-    const user = await this.userRepository.getUserByEmail(email.email);
+    const user = await this.getUserByEmail(email);
     if (!user) throw new UserNotFoundException();
     if (user.role == "user") throw new AccessDenied();
     const token = this.authentificationService.createToken(user.id, user.role);
     await this.sendMailService.sendMailTo(
       user.email,
-      `The url to activate your accout : http://localhost:3000/reset-password?token=${token.token}`,
+      `The url to reset your password : ${process.env.URL}/reset-password?token=${token.token}`,
       "Active your account"
     );
+  }
+
+  public async getUserByEmail(email: AddEmailDto) {
+    return await this.userRepository.getUserByEmail(email.email);
   }
 
   public async activeAccount(newPassword: ChangePasswordDto): Promise<Users> {

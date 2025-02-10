@@ -4,15 +4,13 @@ import express from "express";
 import GenerateCodeNanoIdService from "../generateCode/generateCode.service";
 import EmailSendNodeMailerService from "../mail/sendMailNodeMailer.service";
 import validateDto from "../middlewares/validation.middleware";
-import AddEmailDto from "../email/email.dto";
+import { AddEmailDto } from "../email/email.dto";
 import { Result } from "../utils/utils";
 import HttpException from "../exceptions/HttpException";
-import { codeVerificationDto } from "../email/memory/codeVerification.dto";
+// import { codeVerificationDto } from "../email/memory/codeVerification.dto";
 import UserService from "./user.service";
 import PostgresUserRepository from "./postgresUser.repository";
 import HashPasswordBcryptService from "../hashPassword/hashPasswordBcrypt.service";
-import VerifyEmailService from "../email/memory/verifyEmail.service";
-import memoryEmailRepositoryInstance from "../email/memory/memoryEmail.repository";
 import { Users } from "./user.interface";
 import { ChangePasswordDto, UpdateUserAccountDto } from "./user.dto";
 import { authMiddleware } from "../middlewares/auth.middleware";
@@ -22,21 +20,20 @@ import AuthentificationService from "../authentification/authentification.servic
 class UserController implements Controller {
   public paths: string = "/user";
   public router: Router = express.Router();
-  private verifyEmailService = new VerifyEmailService(
-    memoryEmailRepositoryInstance,
-    new GenerateCodeNanoIdService(),
-    new EmailSendNodeMailerService(),
-    new UserService(
-      new PostgresUserRepository(),
-      new GenerateCodeNanoIdService(),
-      new HashPasswordBcryptService(),
-      new AuthentificationService(
-        new HashPasswordBcryptService(),
-        new PostgresUserRepository()
-      ),
-      new EmailSendNodeMailerService()
-    )
-  );
+  // private verifyEmailService = new VerifyEmailService(
+  //   new GenerateCodeNanoIdService(),
+  //   new EmailSendNodeMailerService(),
+  //   new UserService(
+  //     new PostgresUserRepository(),
+  //     new GenerateCodeNanoIdService(),
+  //     new HashPasswordBcryptService(),
+  //     new AuthentificationService(
+  //       new HashPasswordBcryptService(),
+  //       new PostgresUserRepository()
+  //     ),
+  //     new EmailSendNodeMailerService()
+  //   )
+  // );
   private userService = new UserService(
     new PostgresUserRepository(),
     new GenerateCodeNanoIdService(),
@@ -238,17 +235,21 @@ class UserController implements Controller {
      *               $ref: '#/components/schemas/Emails'
      */
 
+    // this.router.post(
+    //   `${this.paths}/verify`,
+    //   validateDto(AddEmailDto),
+    //   this.verifyEmail
+    // );
     this.router.post(
-      `${this.paths}/verify`,
+      `${this.paths}/email`,
       validateDto(AddEmailDto),
-      this.verifyEmail
+      this.addEmail
     );
-    // this.router.post(this.path, validateDto(AddEmailDto), this.addEmail);
-    this.router.post(
-      `${this.paths}/:email`,
-      validateDto(codeVerificationDto),
-      this.validateEmail
-    );
+    // this.router.post(
+    //   `${this.paths}/:email`,
+    //   validateDto(codeVerificationDto),
+    //   this.validateEmail
+    // );
     this.router.get(
       this.paths,
       authMiddleware,
@@ -300,22 +301,23 @@ class UserController implements Controller {
     }
   };
 
-  //   private addEmail = async (req: express.Request, res: express.Response) => {
-  //     try {
-  //       const emailDto: AddEmailDto = req.body;
-  //       await this.userService.addEmail(emailDto);
-  //       res
-  //         .status(201)
-  //         .send(new Result(true, `Email ${emailDto.email} added!`, null));
-  //     } catch (error) {
-  //       console.log(error);
-  //       if (error instanceof HttpException) {
-  //         res.status(error.status).send(new Result(false, error.message, null));
-  //       } else {
-  //         res.status(500).send(new Result(false, "Internal server error", null));
-  //       }
-  //     }
-  //   };
+  private addEmail = async (req: express.Request, res: express.Response) => {
+    try {
+      const emailDto: AddEmailDto = req.body;
+      await this.userService.addEmail(emailDto);
+      res
+        .status(201)
+        .send(new Result(true, `Email ${emailDto.email} added!`, null));
+    } catch (error) {
+      // console.log(error);
+      if (error instanceof HttpException) {
+        res.status(error.status).send(new Result(false, error.message, null));
+      } else {
+        res.status(500).send(new Result(false, "Internal server error", null));
+      }
+    }
+  };
+
   private getAllEditor = async (
     req: express.Request,
     res: express.Response
@@ -334,14 +336,14 @@ class UserController implements Controller {
 
   private forgotPassword = async (
     req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
+    res: express.Response
   ) => {
     try {
       const email: AddEmailDto = req.body;
       await this.userService.receiveEmailWhenForgotPassword(email);
       res.status(201).send(new Result(true, "Url is sent!", null));
     } catch (error) {
+      // console.log(error);
       if (error instanceof HttpException) {
         res.status(error.status).send(new Result(false, error.message, null));
       } else {
@@ -421,47 +423,47 @@ class UserController implements Controller {
     }
   };
 
-  private validateEmail = async (
-    req: express.Request,
-    res: express.Response
-  ) => {
-    try {
-      const queryEmail = req.params.email;
-      const code: codeVerificationDto = req.body;
-      const emailAdd: Users =
-        await this.verifyEmailService.validateCodeVerification(
-          queryEmail,
-          code
-        );
-      res
-        .status(201)
-        .send(new Result(true, "Your mail is verified!", emailAdd));
-    } catch (error) {
-      if (error instanceof HttpException) {
-        res.status(error.status).send(new Result(false, error.message, null));
-      } else {
-        res.status(500).send(new Result(false, "Internal server error", null));
-      }
-    }
-  };
+  // private validateEmail = async (
+  //   req: express.Request,
+  //   res: express.Response
+  // ) => {
+  //   try {
+  //     const queryEmail = req.params.email;
+  //     const code: codeVerificationDto = req.body;
+  //     const emailAdd: Users =
+  //       await this.verifyEmailService.validateCodeVerification(
+  //         queryEmail,
+  //         code
+  //       );
+  //     res
+  //       .status(201)
+  //       .send(new Result(true, "Your mail is verified!", emailAdd));
+  //   } catch (error) {
+  //     if (error instanceof HttpException) {
+  //       res.status(error.status).send(new Result(false, error.message, null));
+  //     } else {
+  //       res.status(500).send(new Result(false, "Internal server error", null));
+  //     }
+  //   }
+  // };
 
-  private verifyEmail = async (req: express.Request, res: express.Response) => {
-    try {
-      const email: AddEmailDto = req.body;
-      const codeEmailGenerated = await this.verifyEmailService.verifyEmail(
-        email
-      );
-      res
-        .status(201)
-        .send(new Result(true, "Code is sent!", codeEmailGenerated));
-    } catch (error) {
-      if (error instanceof HttpException) {
-        res.status(error.status).send(new Result(false, error.message, null));
-      } else {
-        res.status(500).send(new Result(false, "Internal server error", null));
-      }
-    }
-  };
+  // private verifyEmail = async (req: express.Request, res: express.Response) => {
+  //   try {
+  //     const email: AddEmailDto = req.body;
+  //     const codeEmailGenerated = await this.verifyEmailService.verifyEmail(
+  //       email
+  //     );
+  //     res
+  //       .status(201)
+  //       .send(new Result(true, "Code is sent!", codeEmailGenerated));
+  //   } catch (error) {
+  //     if (error instanceof HttpException) {
+  //       res.status(error.status).send(new Result(false, error.message, null));
+  //     } else {
+  //       res.status(500).send(new Result(false, "Internal server error", null));
+  //     }
+  //   }
+  // };
 }
 
 export default UserController;

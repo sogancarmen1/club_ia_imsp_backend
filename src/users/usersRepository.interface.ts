@@ -1,4 +1,4 @@
-import AddEmailDto from "email/email.dto";
+import {AddEmailDto} from "email/email.dto";
 import { Users } from "./user.interface";
 import { UpdateUserAccountDto } from "./user.dto";
 import Email from "email/email.interface";
