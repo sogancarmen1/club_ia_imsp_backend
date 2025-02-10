@@ -1,7 +1,7 @@
 import { Pool } from "pg";
 import IUserRepository from "./usersRepository.interface";
 import { Users } from "./user.interface";
-import {AddEmailDto} from "email/email.dto";
+import { AddEmailDto } from "email/email.dto";
 import { UpdateUserAccountDto } from "./user.dto";
 import Email from "email/email.interface";
 
@@ -14,6 +14,9 @@ class PostgresUserRepository implements IUserRepository {
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
+      ssl: {
+        rejectUnauthorized: false,
+      },
     });
   }
 
