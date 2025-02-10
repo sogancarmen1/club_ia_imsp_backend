@@ -14,11 +14,9 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: [
-          "http://localhost:4000",
-          "https://club-ia-imsp-backend.onrender.com",
-        ],
+        url: "http://localhost:4000",
       },
+      { url: "https://club-ia-imsp-backend.onrender.com" },
     ],
   },
   apis: [
