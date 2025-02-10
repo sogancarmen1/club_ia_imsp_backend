@@ -12,6 +12,9 @@ async function initializeDatabase() {
     database: process.env.DB_DATABASE,
     password: process.env.DB_PASSWORD,
     port: Number(process.env.DB_PORT),
+    ssl: {
+      rejectUnauthorized: false, // Ignore la vérification du certificat (pour Render)
+    },
   });
 
   try {
