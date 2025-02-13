@@ -126,7 +126,7 @@ class AuthentificationController implements Controller {
     response: express.Response
   ) => {
     response.setHeader("Set-Cookie", [
-      "Authorization=; Path=/; Max-Age=0; SameSite=None; Secure=true; Partitioned",
+      "Authorization=; HttpOnly; Path=/; Max-Age=0; SameSite=None; Secure=true; Partitioned",
     ]);
     response.sendStatus(200);
   };
