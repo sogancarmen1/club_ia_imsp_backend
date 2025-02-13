@@ -286,7 +286,31 @@ class UserController implements Controller {
       this.forgotPassword
     );
     this.router.get(`${this.paths}/:id`, authMiddleware, this.getUserById);
+    this.router.get(
+      `${this.paths}/by/:email`,
+      authMiddleware,
+      this.getUserByEmail
+    );
   }
+
+  private getUserByEmail = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
+    try {
+      const emailDto: AddEmailDto = {
+        email: req.params.email.toString(),
+      };
+      const user = await this.userService.getUserByEmail(emailDto);
+      res.status(200).send(new Result(true, "The user!", user));
+    } catch (error) {
+      if (error instanceof HttpException) {
+        res.status(error.status).send(new Result(false, error.message, null));
+      } else {
+        res.status(500).send(new Result(false, "Internal server error", null));
+      }
+    }
+  };
 
   private getUserById = async (req: express.Request, res: express.Response) => {
     try {
