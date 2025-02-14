@@ -36,7 +36,7 @@ class AuthentificationService {
   }
 
   private createCookie(tokenData: TokenData) {
-    return `Authorization=${tokenData.token}; HttpOnly; Path=/; Max-Age=${tokenData.expiresIn}; SameSite=None; Secure=true; Partitioned`;
+    return `Authorization=${tokenData.token}; Path=/; Max-Age=${tokenData.expiresIn}; SameSite=None; Secure=true; Partitioned`;
   }
 
   public createToken(userId: string, role: string): TokenData {
