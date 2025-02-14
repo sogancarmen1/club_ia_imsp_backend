@@ -15,6 +15,14 @@ export function authMiddleware(
   if (cookies && cookies.Authorization) {
     const user = decodedToken(cookies.Authorization);
     if (Number(user?._id) > 0) {
+      request.user = {
+        email: user?._email,
+        id: user?._id,
+        role: user?._role,
+        data_inscription: "",
+        state: "",
+        password: "",
+      };
       next();
     } else {
       response.send(new Result(false, "Wrong credentials provided!", null));

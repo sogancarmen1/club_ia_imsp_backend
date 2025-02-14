@@ -28,7 +28,7 @@ class AuthentificationService {
         user.password
       );
       if (isPasswordMatching) {
-        const tokenData = this.createToken(user.id, user.role);
+        const tokenData = this.createToken(user.id, user.role, user.email);
         const cookie = this.createCookie(tokenData);
         return cookie;
       } else throw new WrongCredentialsException();
@@ -39,12 +39,13 @@ class AuthentificationService {
     return `Authorization=${tokenData.token}; HttpOnly; Path=/; Max-Age=${tokenData.expiresIn}; SameSite=None; Secure=true; Partitioned`;
   }
 
-  public createToken(userId: string, role: string): TokenData {
+  public createToken(userId: string, role: string, email: string): TokenData {
     const expireIn = 60 * 60;
     const secret = process.env.JWT_SECRET;
     const dataStoredInToken: DataStoredInToken = {
       _id: userId,
       _role: role,
+      _email: email,
     };
     return {
       expiresIn: expireIn,

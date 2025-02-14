@@ -9,6 +9,8 @@ import HttpException from "../exceptions/HttpException";
 import UserService from "../users/user.service";
 import PostgresUserRepository from "../users/postgresUser.repository";
 import GenerateCodeNanoIdService from "../generateCode/generateCode.service";
+import { authMiddleware } from "../middlewares/auth.middleware";
+import RequestWithUser from "interfaces/requestWithUser.interface";
 
 class AuthentificationController implements Controller {
   public paths = "/auth";
@@ -96,7 +98,32 @@ class AuthentificationController implements Controller {
      *         description: OK
      */
     this.router.post(`${this.paths}/logout`, this.loggingOut);
+    this.router.get(`${this.paths}/me`, authMiddleware, this.authenticate);
   }
+
+  private authenticate = async (
+    request: RequestWithUser,
+    response: express.Response
+  ) => {
+    try {
+      response.status(201).send(
+        new Result(true, "the value", {
+          isTrue: true,
+          user: request.user,
+        })
+      );
+    } catch (error) {
+      if (error instanceof HttpException) {
+        response
+          .status(error.status)
+          .send(new Result(false, error.message, null));
+      } else {
+        response
+          .status(500)
+          .send(new Result(false, "Internal server error", null));
+      }
+    }
+  };
 
   private logginIn = async (
     request: express.Request,
@@ -105,9 +132,9 @@ class AuthentificationController implements Controller {
   ) => {
     try {
       const logInData: LoginDto = request.body;
-      const cookie = await this.authentificationService.loginAdmin(logInData);
-      response.setHeader("Set-Cookie", [cookie]);
-      response.status(200).send(new Result(true, "you are connected", cookie));
+      const result = await this.authentificationService.loginAdmin(logInData);
+      response.setHeader("Set-Cookie", [result]);
+      response.status(200).send(new Result(true, "you are connected", result));
     } catch (error) {
       if (error instanceof HttpException) {
         response

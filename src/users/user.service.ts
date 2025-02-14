@@ -35,7 +35,7 @@ class UserService {
       codeGeneratedHashed,
       "inactive"
     );
-    const token = this.authentificationService.createToken(user.id, user.role);
+    const token = this.authentificationService.createToken(user.id, user.role, user.email);
     await this.sendMailService.sendMailTo(
       user.email,
       `The url to activate your account : ${process.env.URL}/reset-password?token=${token.token}`,
@@ -50,7 +50,7 @@ class UserService {
     const user = await this.getUserByEmail(email);
     if (!user) throw new UserNotFoundException();
     if (user.role == "user") throw new AccessDenied();
-    const token = this.authentificationService.createToken(user.id, user.role);
+    const token = this.authentificationService.createToken(user.id, user.role, user.email);
     await this.sendMailService.sendMailTo(
       user.email,
       `The url to reset your password : ${process.env.URL}/reset-password?token=${token.token}`,
