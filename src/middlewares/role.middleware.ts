@@ -8,7 +8,7 @@ const authorizeRoles = (...allowedRoles) => {
     res: express.Response,
     next: express.NextFunction
   ) => {
-    if (!allowedRoles.includes(decodedToken(req.cookies.Authorization)._role)) {
+    if (!allowedRoles.includes(decodedToken(req.cookies.Authorization)?._role)) {
       res.status(403).send(new Result(false, "Access denied!", null));
       return;
     } else {
