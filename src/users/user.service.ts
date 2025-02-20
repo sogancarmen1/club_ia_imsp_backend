@@ -13,6 +13,7 @@ import AuthentificationService from "../authentification/authentification.servic
 import ISendMail from "../mail/sendMailPort.interface";
 import { decodedToken } from "../middlewares/auth.middleware";
 import AccessDenied from "../exceptions/AccessDeniedException";
+import { ContactUsDto } from "../contactUs/contactUs.dto";
 
 class UserService {
   constructor(
@@ -22,6 +23,15 @@ class UserService {
     private readonly authentificationService: AuthentificationService,
     private readonly sendMailService: ISendMail
   ) {}
+
+  public async contactUs(contactInfo: ContactUsDto): Promise<void> {
+    await this.sendMailService.contactUs(
+      contactInfo.email,
+      contactInfo.name,
+      contactInfo.subject,
+      contactInfo.message
+    );
+  }
 
   public async createEditor(email: AddEmailDto): Promise<Users> {
     await this.ConflictEmail(email);
@@ -35,7 +45,11 @@ class UserService {
       codeGeneratedHashed,
       "inactive"
     );
-    const token = this.authentificationService.createToken(user.id, user.role, user.email);
+    const token = this.authentificationService.createToken(
+      user.id,
+      user.role,
+      user.email
+    );
     await this.sendMailService.sendMailTo(
       user.email,
       `The url to activate your account : ${process.env.URL}/reset-password?token=${token.token}`,
@@ -50,7 +64,11 @@ class UserService {
     const user = await this.getUserByEmail(email);
     if (!user) throw new UserNotFoundException();
     if (user.role == "user") throw new AccessDenied();
-    const token = this.authentificationService.createToken(user.id, user.role, user.email);
+    const token = this.authentificationService.createToken(
+      user.id,
+      user.role,
+      user.email
+    );
     await this.sendMailService.sendMailTo(
       user.email,
       `The url to reset your password : ${process.env.URL}/reset-password?token=${token.token}`,
