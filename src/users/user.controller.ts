@@ -16,6 +16,7 @@ import { ChangePasswordDto, UpdateUserAccountDto } from "./user.dto";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import authorizeRoles from "../middlewares/role.middleware";
 import AuthentificationService from "../authentification/authentification.service";
+import { ContactUsDto } from "../contactUs/contactUs.dto";
 
 class UserController implements Controller {
   public paths: string = "/user";
@@ -291,7 +292,22 @@ class UserController implements Controller {
       authMiddleware,
       this.getUserByEmail
     );
+    this.router.post(
+      `${this.paths}/contactus`,
+      validateDto(ContactUsDto),
+      this.contactUs
+    );
   }
+
+  private contactUs = async (req: express.Request, res: express.Response) => {
+    try {
+      const contactUs: ContactUsDto = req.body;
+      await this.userService.contactUs(contactUs);
+      res
+        .status(200)
+        .send(new Result(true, "The contact is successfully", null));
+    } catch (error) {}
+  };
 
   private getUserByEmail = async (
     req: express.Request,

@@ -25,6 +25,32 @@ class EmailSendNodeMailerService implements ISendMail {
     return options;
   }
 
+  private mailOptions2(
+    email: string,
+    subjects: string,
+    yourName: string,
+    texts: string
+  ) {
+    const options = {
+      from: `${process.env.EMAIL_USERNAME}`,
+      to: `${process.env.EMAIL_USERNAME}`,
+      subject: `${yourName}, ${email}, ${subjects}`,
+      text: texts,
+    };
+    return options;
+  }
+
+  public async contactUs(
+    userEmail: string,
+    yourName: string,
+    subject: string,
+    message: string
+  ): Promise<void> {
+    await this.transporter.sendMail(
+      this.mailOptions2(userEmail, subject, yourName, message)
+    );
+  }
+
   public async sendMailTo(
     userEmail: string,
     message: string,

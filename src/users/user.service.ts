@@ -13,6 +13,7 @@ import AuthentificationService from "../authentification/authentification.servic
 import ISendMail from "../mail/sendMailPort.interface";
 import { decodedToken } from "../middlewares/auth.middleware";
 import AccessDenied from "../exceptions/AccessDeniedException";
+import { ContactUsDto } from "../contactUs/contactUs.dto";
 
 class UserService {
   constructor(
@@ -22,6 +23,15 @@ class UserService {
     private readonly authentificationService: AuthentificationService,
     private readonly sendMailService: ISendMail
   ) {}
+
+  public async contactUs(contactInfo: ContactUsDto): Promise<void> {
+    await this.sendMailService.contactUs(
+      contactInfo.email,
+      contactInfo.name,
+      contactInfo.subject,
+      contactInfo.message
+    );
+  }
 
   public async createEditor(email: AddEmailDto): Promise<Users> {
     await this.ConflictEmail(email);
