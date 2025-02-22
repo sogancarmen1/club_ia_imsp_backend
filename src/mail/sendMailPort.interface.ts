@@ -2,7 +2,9 @@ interface ISendMail {
   sendMailTo(
     userEmail: string,
     subject: string,
-    message: string
+    lien: string,
+    textButton: string,
+    text: string
   ): Promise<void>;
   contactUs(
     userEmail: string,
