@@ -1,6 +1,7 @@
 import nodemailer, { Transporter } from "nodemailer";
 import ISendMail from "./sendMailPort.interface";
 import Email from "email/email.interface";
+import ContentEmails from "./contentEmail";
 
 class EmailSendNodeMailerService implements ISendMail {
   private transporter: Transporter;
@@ -15,12 +16,21 @@ class EmailSendNodeMailerService implements ISendMail {
     });
   }
 
-  private mailOptions(emails: string, subjects: string, texts: string) {
+  private mailOptions(
+    emails: string,
+    subjects: string,
+    lien: string,
+    textButton: string,
+    text: string
+  ) {
     const options = {
       from: `Club IA-IMSP ${process.env.EMAIL_USERNAME}`,
       to: emails,
       subject: subjects,
-      text: texts,
+      html: ContentEmails(lien, textButton, text),
+      headers: {
+        "Content-Type": "text/html; charset=UTF-8",
+      },
     };
     return options;
   }
@@ -53,11 +63,13 @@ class EmailSendNodeMailerService implements ISendMail {
 
   public async sendMailTo(
     userEmail: string,
-    message: string,
-    subject: string
+    subject: string,
+    lien: string,
+    textButton: string,
+    text: string
   ): Promise<void> {
     await this.transporter.sendMail(
-      this.mailOptions(userEmail, subject, message)
+      this.mailOptions(userEmail, subject, lien, textButton, text)
     );
   }
 }

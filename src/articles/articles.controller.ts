@@ -536,25 +536,10 @@ class ArticlesController implements Controller {
     try {
       return req.files.map((file) => {
         return {
-          url: `${req.protocol}://${req.get(
-            "host"
-          )}/src/config/saveFilesInDiskServer/images/${file.originalname
-            .replace(/\s+/g, "")
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/'/g, "")
-            .replace(/[©-]/g, "")}`,
+          url: `data:${file.mimetype};base64,${file.buffer.toString("base64")}`,
           type: file.mimetype,
-          original_name: file.originalname
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/'/g, ""),
-          files_names: file.filename
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/'/g, "")
-            .replace(/\s+/g, "")
-            .replace(/[©-]/g, ""),
+          original_name: "",
+          files_names: "",
           size: file.size,
         };
       });
