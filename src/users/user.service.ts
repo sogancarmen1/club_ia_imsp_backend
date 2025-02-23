@@ -50,10 +50,17 @@ class UserService {
       user.role,
       user.email
     );
+    // await this.sendMailService.sendMailTo(
+    //   user.email,
+    //   `The url to activate your account : ${process.env.URL}/reset-password?token=${token.token}`,
+    //   "Active your account",
+    // );
     await this.sendMailService.sendMailTo(
       user.email,
-      `The url to activate your account : ${process.env.URL}/reset-password?token=${token.token}`,
-      "Active your account"
+      "Activation de compte",
+      `${process.env.URL}/reset-password?token=${token.token}`,
+      "Activer votre compte",
+      `Votre compte vient d'être créer, cliquer sur bouton pour l'activer.`
     );
     return user;
   }
@@ -71,9 +78,16 @@ class UserService {
     );
     await this.sendMailService.sendMailTo(
       user.email,
-      `The url to reset your password : ${process.env.URL}/reset-password?token=${token.token}`,
-      "Active your account"
+      "Mis à jour de mot de passe",
+      `${process.env.URL}/reset-password?token=${token.token}`,
+      "Changer mon mot de passe",
+      `Cliquer sur ce bouton pour changer votre mot de passe.`
     );
+    // await this.sendMailService.sendMailTo(
+    //   user.email,
+    //   `The url to reset your password : ${process.env.URL}/reset-password?token=${token.token}`,
+    //   "Active your account"
+    // );
   }
 
   public async getUserByEmail(email: AddEmailDto) {

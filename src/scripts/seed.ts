@@ -4,6 +4,18 @@ import HashPasswordBcryptService from "../hashPassword/hashPasswordBcrypt.servic
 import EmailAlreadyExistException from "../exceptions/EmailAlreadyExistException";
 dotenv.config();
 
+const convertValue = (emails: string, passwordHashed: string) => {
+  return emails
+    .split(",")
+    .map(
+      (email) =>
+        `('${email}', '${
+          new Date().toISOString().split("T")[0]
+        }', '${passwordHashed}', 'admin', 'active')`
+    )
+    .join(", ");
+};
+
 async function initializeDatabase() {
   const bcryptService = new HashPasswordBcryptService();
   const client = new Pool({
@@ -30,9 +42,9 @@ async function initializeDatabase() {
     await client.query(
       `
         INSERT INTO subscriber(email, date_inscription, password, role, state) 
-            VALUES ($1, $2, $3, $4, $5);
-        `,
-      [process.env.ADMIN_EMAIL, new Date(), passwordHashed, "admin", "active"]
+            VALUES ${convertValue(process.env.ADMIN_EMAIL, passwordHashed)};
+        `
+      // [process.env.ADMIN_EMAIL, new Date(), passwordHashed, "admin", "active"]
     );
 
     console.log("Operation successfully!");

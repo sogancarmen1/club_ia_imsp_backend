@@ -11,11 +11,11 @@ class NewslettersService {
 
   public async sendNewsletters(message: SendNewlettersDto) {
     const allEmails = await this.userService.getAllEmail();
-    return await this.emailSendService.sendMailTo(
-      this.convertAllEmailsToOneStringCharactere(allEmails),
-      message.subject,
-      message.message
-    );
+    // return await this.emailSendService.sendMailTo(
+    //   this.convertAllEmailsToOneStringCharactere(allEmails),
+    //   message.subject,
+    //   message.message
+    // );
   }
 
   private convertAllEmailsToOneStringCharactere(emails: Email[] | []): string {
