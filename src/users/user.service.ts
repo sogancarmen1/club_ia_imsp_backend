@@ -50,7 +50,6 @@ class UserService {
       user.role,
       user.email
     );
-
     // await this.sendMailService.sendMailTo(
     //   user.email,
     //   `The url to activate your account : ${process.env.URL}/reset-password?token=${token.token}`,
