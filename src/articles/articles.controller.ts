@@ -11,11 +11,25 @@ import { authMiddleware } from "../middlewares/auth.middleware";
 import authorizeRoles from "../middlewares/role.middleware";
 import path from "path";
 import fs from "fs";
+import NewslettersService from "../newsletters/newsletters.service";
+import EmailSendNodeMailerService from "../mail/sendMailNodeMailer.service";
+import UserService from "../users/user.service";
+import PostgresUserRepository from "../users/postgresUser.repository";
+import GenerateCodeNanoIdService from "../generateCode/generateCode.service";
+import HashPasswordBcryptService from "../hashPassword/hashPasswordBcrypt.service";
+import AuthentificationService from "../authentification/authentification.service";
 
 class ArticlesController implements Controller {
   public paths = "/articles";
   public router = express.Router();
-  private articleService = new ArticleService(new PostgresArticlesRepository());
+  private articleService = new ArticleService(new PostgresArticlesRepository(),
+                                             new NewslettersService(new EmailSendNodeMailerService(),
+                                                                   new UserService(new PostgresUserRepository(),
+                                                                                  new GenerateCodeNanoIdService(),
+                                                                                  new HashPasswordBcryptService(),
+                                                                                  new AuthentificationService(new HashPasswordBcryptService(),
+                                                                                                             new PostgresUserRepository()),
+                                                                                  new EmailSendNodeMailerService())));
 
   constructor() {
     this.initializeRoutes();

@@ -1,4 +1,4 @@
-import * as bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { IHashPasswordService } from "./hashPasswordService.interface";
 
 class HashPasswordBcryptService implements IHashPasswordService {

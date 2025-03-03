@@ -90,7 +90,8 @@ function ContentEmails(lien: string, textButton: string, text: string) {
                 <div class="content">
                     <h2>Bonjour/Bonsoir !</h2>
                     <p>
-                        <i class="fas fa-check-circle" style="color: #3bd7ec;"></i> Merci de vous être inscrit sur notre plateforme. Nous sommes ravis de vous compter parmi nous. ${text}
+                        <i class="fas fa-check-circle" style="color: #3bd7ec;"></i>
+                        Merci pour votre inscription sur notre plateforme. Nous sommes ravis de vous compter parmi nous. ${text}
                     </p>
                     <a href="${lien}" class="button">${textButton}</a>
                     <p>
