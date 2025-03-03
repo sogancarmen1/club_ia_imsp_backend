@@ -42,26 +42,34 @@ class App {
     this.app.use(errorMiddleware);
     this.app.use(
       cors({
-        origin: process.env.URL,
+        origin: function (origin, callback) {
+          if (!origin || process.env.URL.split(",").includes(origin)) {
+            callback(null, origin);
+          } else {
+            callback(new Error("CORS non autorisé pour cette origine"));
+          }
+        },
         credentials: true,
+        methods: "GET, PUT, POST, DELETE, OPTIONS",
+        allowedHeaders: "Content-type,Accept,X-Access-Token,X-Key",
       })
     );
-    this.app.all("/*", function (req, res, next) {
-      res.header("Access-Control-Allow-Origin", process.env.URL);
-      res.header(
-        "Access-Control-Allow-Methods",
-        "GET, PUT, POST, DELETE, OPTIONS"
-      );
-      res.header(
-        "Access-Control-Allow-Headers",
-        "Content-type,Accept,X-Access-Token,X-Key"
-      );
-      if (req.method == "OPTIONS") {
-        res.status(200).end();
-      } else {
-        next();
-      }
-    });
+    // this.app.all("/*", function (req, res, next) {
+    //   res.header("Access-Control-Allow-Origin", process.env.URL);
+    //   res.header(
+    //     "Access-Control-Allow-Methods",
+    //     "GET, PUT, POST, DELETE, OPTIONS"
+    //   );
+    //   res.header(
+    //     "Access-Control-Allow-Headers",
+    //     "Content-type,Accept,X-Access-Token,X-Key"
+    //   );
+    //   if (req.method == "OPTIONS") {
+    //     res.status(200).end();
+    //   } else {
+    //     next();
+    //   }
+    // });
   }
 
   private initializeControllers(controllers: Controller[]): void {
