@@ -58,7 +58,7 @@ class UserService {
     await this.sendMailService.sendMailTo(
       user.email,
       "Activation de compte",
-      `${process.env.URL}/reset-password?token=${token.token}`,
+      `${process.env.URL.split(",")[1]}/reset-password?token=${token.token}`,
       "Activer votre compte",
       `Votre compte vient d'être créer, cliquer sur bouton pour l'activer.`
     );
@@ -79,7 +79,7 @@ class UserService {
     await this.sendMailService.sendMailTo(
       user.email,
       "Mis à jour de mot de passe",
-      `${process.env.URL}/reset-password?token=${token.token}`,
+      `${process.env.URL.split(",")[1]}/reset-password?token=${token.token}`,
       "Changer mon mot de passe",
       `Cliquer sur ce bouton pour changer votre mot de passe.`
     );
