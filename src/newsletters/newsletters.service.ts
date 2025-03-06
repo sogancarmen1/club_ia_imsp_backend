@@ -11,11 +11,9 @@ class NewslettersService {
 
   public async sendNewsletters(message: SendNewlettersDto) {
     const allEmails = await this.userService.getAllEmail();
-    // return await this.emailSendService.sendMailTo(
-    //   this.convertAllEmailsToOneStringCharactere(allEmails),
-    //   message.subject,
-    //   message.message
-    // );
+    if(allEmails.length !== 0) {
+      await this.emailSendService.sendMailTo(this.convertAllEmailsToOneStringCharactere(allEmails), message.subject, message.link, message.textButton, message.text);
+    }
   }
 
   private convertAllEmailsToOneStringCharactere(emails: Email[] | []): string {

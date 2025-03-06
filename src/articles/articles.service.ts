@@ -3,9 +3,12 @@ import IArticlesRepository from "./articlesRepository.interface";
 import { AddFileDto, CreateArticleDto, UpdateArticleDto } from "./articles.dto";
 import ArticleAlreadyExistException from "../exceptions/ArticleAlreadyExistException";
 import ArticleNotFoundException from "../exceptions/ArticleNotFoundException";
+import NewslettersService from "newsletters/newsletters.service";
+import { SendNewlettersDto } from "newsletters/newsletters.dto";
 
 class ArticleService {
-  constructor(private readonly repository: IArticlesRepository) {}
+  constructor(private readonly repository: IArticlesRepository,
+             private readonly newsletterService: NewslettersService) {}
 
   public async getLenghtOfAllMedias(): Promise<Number> {
     return await this.repository.getNumberOfAllMedias();
@@ -115,9 +118,35 @@ class ArticleService {
     newArticle: CreateArticleDto,
     files?: AddFileDto[]
   ): Promise<Article> {
+    const frontEndLink = process.env.URL.split(",")[0];
+
     await this.checkIfArticleTitleAlreadyExist(newArticle.title);
-    if (files) return await this.repository.createArticle(newArticle, files);
-    else return await this.repository.createArticle(newArticle);
+    if (files) {
+      const articleCreatedWithFiles: Article =  await this.repository.createArticle(newArticle, files);
+      const newsLettersInformations: SendNewlettersDto = {
+         subject: "Nouvel article ajouté",
+         link: articleCreatedWithFiles.type == "project" ?
+          `${frontEndLink}/project/posts?lire=${articleCreatedWithFiles.id}-${articleCreatedWithFiles.title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[#,',\s]+/g, "-").toLowerCase()}` :
+          `${frontEndLink}/actualities/posts?lire=${articleCreatedWithFiles.id}-${articleCreatedWithFiles.title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[#,',\s]+/g, "-").toLowerCase()}`,
+         textButton: "Cliquer ici",
+         text: `Titre de l'article : ${newArticle.title}`
+       }
+      await this.newsletterService.sendNewsletters(newsLettersInformations);
+      return articleCreatedWithFiles;
+    }
+    else {
+      const articleCreated: Article =  await this.repository.createArticle(newArticle);
+       const newsLettersInformations: SendNewlettersDto = {
+         subject: "Nouvel article ajouté",
+         link: articleCreated.type == "project" ?
+           `${frontEndLink}/project/posts?lire=${articleCreated.id}-${articleCreated.title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[#,',\s]+/g, "-").toLowerCase()}` :
+           `${frontEndLink}/actualities/posts?lire=${articleCreated.id}-${articleCreated.title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[#,',\s]+/g, "-").toLowerCase()}`,
+         textButton: "Cliquer ici",
+         text: `Titre de l'article : ${newArticle.title}`
+       }
+      await this.newsletterService.sendNewsletters(newsLettersInformations);
+      return articleCreated;
+    }
   }
 
   public async getArticleById(articleId: string): Promise<Article> {

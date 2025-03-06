@@ -6,5 +6,11 @@ export class SendNewlettersDto {
   public subject: string;
   @IsNotEmpty()
   @IsString()
-  public message: string;
+  public link: string;
+  @IsString()
+  @IsNotEmpty()
+  public textButton: string;
+  @IsString()
+  @IsNotEmpty()
+  public text: string;
 }
